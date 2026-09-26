@@ -38,3 +38,5 @@ Thumbs.db
 
 # Foundry artifacts (regenerate with forge build)
 # (contracts/out committed by Arc Studio export; ignoring here for fresh clones)
+.vercel
+.env*
