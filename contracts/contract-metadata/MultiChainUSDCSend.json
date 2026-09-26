@@ -1,0 +1,317 @@
+{
+  "contractAddress": "0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f",
+  "network": "ARC-TESTNET",
+  "deployerWalletId": "3c2464b2-8369-52e2-a782-800bbeca5396",
+  "contract_code_path": "/home/user/app/contracts/MultiChainUSDCSend.sol",
+  "contract_compiled_code_path": "/home/user/app/contracts/out/MultiChainUSDCSend.sol/MultiChainUSDCSend.json",
+  "contract_network_and_links": {
+    "Arc Testnet": "https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f"
+  },
+  "contract_deployments": [
+    {
+      "chain": "Arc Testnet",
+      "address": "0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f",
+      "txHash": "0x385e775b147491541c06b26d6f5a1edd0b578fa1e3e0f66937af28f4256a097c",
+      "deployedAt": "2026-09-26T18:17:27.996Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb",
+      "txHash": "0x9a639a6f55e0c5b2b24f8279edebe28269649a75d2c913d034b0ff176a2ee953",
+      "deployedAt": "2026-09-26T17:58:36.350Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0x014f84afa85297376a4a04d4b5922f3ec1f4a215",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x014f84afa85297376a4a04d4b5922f3ec1f4a215",
+      "txHash": "0xd1c7850433ead05b1752409220a280a67032c9b3a8282347be7ee946df4e6de8",
+      "deployedAt": "2026-09-26T17:40:41.669Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e",
+      "txHash": "0x39c8b0ba04643a67282804ec33b95418bba810b7635fbf09fbaf3182195760ca",
+      "deployedAt": "2026-09-26T17:21:09.408Z"
+    }
+  ],
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "tokenMessengerWithFees_",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "usdc_",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "multiSend",
+      "inputs": [
+        {
+          "name": "requests",
+          "type": "tuple[]",
+          "internalType": "struct MultiChainUSDCSend.BurnRequest[]",
+          "components": [
+            {
+              "name": "destinationDomain",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "mintRecipient",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "fee",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "signedQuote",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "tokenMessengerWithFees",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "totalCost",
+      "inputs": [
+        {
+          "name": "requests",
+          "type": "tuple[]",
+          "internalType": "struct MultiChainUSDCSend.BurnRequest[]",
+          "components": [
+            {
+              "name": "destinationDomain",
+              "type": "uint32",
+              "internalType": "uint32"
+            },
+            {
+              "name": "mintRecipient",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "fee",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "signedQuote",
+              "type": "bytes",
+              "internalType": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "usdcErc20Total",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "nativeFeeTotal",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "usdc",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "BurnInitiated",
+      "inputs": [
+        {
+          "name": "destinationDomain",
+          "type": "uint32",
+          "indexed": true,
+          "internalType": "uint32"
+        },
+        {
+          "name": "mintRecipient",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "fee",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MultiSendExecuted",
+      "inputs": [
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "numDestinations",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "totalAmount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "totalFee",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "EmptyRequests",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InsufficientNativeFee",
+      "inputs": [
+        {
+          "name": "provided",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "required",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "NativeRefundFailed",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SafeERC20FailedOperation",
+      "inputs": [
+        {
+          "name": "token",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "TooManyRequests",
+      "inputs": [
+        {
+          "name": "provided",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "maxAllowed",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ZeroAddress",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ZeroAmount",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ZeroMintRecipient",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    }
+  ]
+}

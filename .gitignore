@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+.cache/
+
+# Env and secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Arc Studio local artifacts
+console.jsonl
+traces.jsonl
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+bun-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Foundry artifacts (regenerate with forge build)
+# (contracts/out committed by Arc Studio export; ignoring here for fresh clones)
