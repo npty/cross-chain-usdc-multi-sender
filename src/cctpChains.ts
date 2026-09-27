@@ -162,3 +162,15 @@ export const FORWARDING_DEST_CHAINS: OnchainChain[] = ALL_CHAINS.filter(
 export function getForwardingChain(chainId: number): OnchainChain | undefined {
   return ALL_CHAINS.find((c) => c.chainId === chainId);
 }
+
+/**
+ * Block explorer URL for a wallet address on a destination chain.
+ * Uses the chain's configured explorerBase (Etherscan/Blockscout family all
+ * serve address pages at `/address/{address}`).
+ * Returns undefined when the chain has no explorer configured.
+ */
+export function buildDestinationAddressUrl(chainId: number, address: string): string | undefined {
+  const chain = getForwardingChain(chainId);
+  if (!chain?.explorerBase) return undefined;
+  return `${chain.explorerBase.replace(/\/+$/, '')}/address/${address}`;
+}
