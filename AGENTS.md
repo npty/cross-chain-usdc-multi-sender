@@ -18,11 +18,13 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 | MultiChainUSDCSend v2 (deprecated) | Arc Testnet | 0x014f84afa85297376a4a04d4b5922f3ec1f4a215 | https://explorer.testnet.arc.io/address/0x014f84afa85297376a4a04d4b5922f3ec1f4a215 |
 | MultiChainUSDCSend v3 (deprecated) | Arc Testnet | 0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb | https://explorer.testnet.arc.io/address/0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb |
 | MultiChainUSDCSend v4 (active) | Arc Testnet | 0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f | https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f |
+| MultiChainUSDCSend v1 (broken — wrong messenger) | Arc Mainnet | 0x0032A5147f96039b62D08f651884aa58CFa30772 | https://explorer.arc.io/address/0x0032A5147f96039b62D08f651884aa58CFa30772 |
+| MultiChainUSDCSend v2 (active) | Arc Mainnet | 0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 | https://explorer.arc.io/address/0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 |
 
 ## Environment Variables
 
 - `VITE_MULTISEND_ADDRESS` — MultiChainUSDCSend contract address on Arc Testnet (set in .env)
-- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend on Arc mainnet: `0x0032A5147f96039b62D08f651884aa58CFa30772` (deployed 2026-09-27, deploy tx `0x49188e3c7116d9cb8f2f0f3520266e597a52cd948129f50a6bca95ece2981ee2`). Set in Vercel for production+preview; Mainnet mode is live.
+- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend on Arc mainnet: `0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839` (redeployed 2026-09-27, deploy tx `0x104155f354e47fe3a0f2754b48901b9861b490f4aeeef636d05ece6e3f08cb22`; the first mainnet deploy `0x0032A5147f96039b62D08f651884aa58CFa30772` was broken — it stored TokenMessengerV2 instead of TokenMessengerWithFees, so all sends reverted). Set in Vercel for production+preview; Mainnet mode is live and a 1 USDC test to Arbitrum succeeded 2026-09-27.
 
 ## Networks
 

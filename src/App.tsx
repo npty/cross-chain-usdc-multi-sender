@@ -395,9 +395,15 @@ export default function App() {
                 </p>
               </div>
               {isWrongChain && (
-                <div className="ml-2 rounded-lg px-2 py-1 text-xs font-medium" style={{ background: 'rgba(186,43,76,0.08)', color: 'var(--danger)' }}>
-                  Wrong network
-                </div>
+                <button
+                  type="button"
+                  onClick={() => switchChain({ chainId: SOURCE_CHAIN_ID })}
+                  title="Switch to Arc"
+                  className="ml-2 cursor-pointer rounded-lg px-2 py-1 text-xs font-medium"
+                  style={{ background: 'rgba(186,43,76,0.08)', color: 'var(--danger)' }}
+                >
+                  Wrong network — tap to switch
+                </button>
               )}
             </div>
           )}
