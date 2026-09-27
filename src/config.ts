@@ -17,7 +17,7 @@
  * https://developers.circle.com/cctp/concepts/supported-chains-and-domains
  */
 
-import { http, createConfig } from 'wagmi'
+import { http, createConfig, fallback } from 'wagmi'
 import {
   mainnet,
   avalanche,
@@ -260,10 +260,22 @@ export const config = createConfig({
     [hyperEvmTestnet.id]: http(),
     [xdcApothem.id]: http(),
     [mainnet.id]: http(),
-    [avalanche.id]: http(),
+    // Source chains get fallback RPCs: if the primary endpoint is unreachable
+    // from the user's browser/network, reads (balance, nonce) and writes fall
+    // back to a secondary provider instead of failing outright.
+    [avalanche.id]: fallback([
+      http('https://api.avax.network/ext/bc/C/rpc'),
+      http('https://avalanche-c-chain-rpc.publicnode.com'),
+    ]),
     [optimism.id]: http(),
-    [arbitrum.id]: http(),
-    [base.id]: http(),
+    [arbitrum.id]: fallback([
+      http('https://arb1.arbitrum.io/rpc'),
+      http('https://arbitrum-one-rpc.publicnode.com'),
+    ]),
+    [base.id]: fallback([
+      http('https://mainnet.base.org'),
+      http('https://base-rpc.publicnode.com'),
+    ]),
     [polygon.id]: http(),
     [unichain.id]: http(),
     [linea.id]: http(),

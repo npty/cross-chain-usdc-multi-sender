@@ -799,12 +799,18 @@ function SummaryRow({ label, value, sub, bold, accent }: { label: string; value:
 }
 
 function parseOnchainError(error: unknown): string {
-  const message = (error as { message?: string })?.message?.toLowerCase() ?? '';
+  const rawMessage = (error as { shortMessage?: string; message?: string })?.shortMessage
+    ?? (error as { message?: string })?.message
+    ?? '';
+  const message = rawMessage.toLowerCase();
   if (message.includes('user rejected') || message.includes('user denied')) return 'Transaction cancelled.';
-  if (message.includes('insufficient funds') || message.includes('exceeds balance')) return 'Insufficient balance.';
+  if (message.includes('insufficient funds') || message.includes('exceeds balance') || message.includes('insufficient balance')) return 'Insufficient balance.';
   if (message.includes('reverted')) {
-    const m = message.match(/reason="([^"]+)"/);
+    const m = rawMessage.match(/reason="([^"]+)"/);
     return m ? `Transaction failed: ${m[1]}` : 'Transaction reverted. Check fees and amounts.';
   }
-  return 'Something went wrong. Please try again.';
+  // Unknown failure: surface the underlying message (truncated) so the cause
+  // is diagnosable instead of a dead-end generic toast.
+  const short = rawMessage.split('\n')[0].replace(/\s+/g, ' ').trim().slice(0, 180);
+  return short ? `Something went wrong: ${short}` : 'Something went wrong. Please try again.';
 }
