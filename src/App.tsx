@@ -184,7 +184,7 @@ export default function App() {
   const sourceChain = requireChain(SOURCE_CHAIN_ID);
   const sourceUsdc = getUsdc(SOURCE_CHAIN_ID)!;
 
-  const { data: usdcBalance } = useReadContract({
+  const { data: usdcBalance, isError: isBalanceError, error: balanceError, refetch: refetchBalance } = useReadContract({
     address: sourceUsdc.address as `0x${string}`,
     abi: erc20Abi,
     functionName: 'balanceOf',
@@ -536,6 +536,17 @@ export default function App() {
                 <p className="display text-base font-bold tabular-nums leading-tight" style={{ color: 'var(--ink)' }}>
                   {formattedBalance ?? '—'} <span className="text-xs font-medium" style={{ color: 'var(--subtle)' }}>USDC</span>
                 </p>
+                {isBalanceError && (
+                  <button
+                    type="button"
+                    onClick={() => refetchBalance()}
+                    className="text-xs leading-tight underline"
+                    style={{ color: 'var(--danger)' }}
+                    title={balanceError instanceof Error ? balanceError.message : String(balanceError ?? '')}
+                  >
+                    Balance failed to load — tap to retry
+                  </button>
+                )}
               </div>
               {isWrongChain && (
                 <button

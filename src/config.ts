@@ -240,7 +240,11 @@ export const config = createConfig({
   connectors: [injected()],
   transports: {
     [arcTestnet.id]: http(),
-    [arc.id]: http(),
+    [arc.id]: fallback([
+      http('https://rpc.mainnet.arc.io'),
+      http('https://rpc.blockdaemon.mainnet.arc.io'),
+      http('https://rpc.drpc.mainnet.arc.io'),
+    ]),
     [ethereumSepolia.id]: http(),
     [avalancheFuji.id]: http(),
     [opSepolia.id]: http(),
