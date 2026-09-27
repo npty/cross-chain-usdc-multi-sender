@@ -13,16 +13,18 @@ import { Plus, ArrowRight, Loader2, ExternalLink, Info, CheckCircle2 } from 'luc
 import { toast } from 'sonner';
 
 import { getUsdc, requireChain, buildTxExplorerUrl } from '@/onchain-facts';
-import { getForwardingChain, buildDestinationAddressUrl } from '@/cctpChains';
+import {
+  NETWORKS,
+  NETWORK_MODES,
+  getNetworkChain,
+  buildDestinationAddressUrl,
+  type NetworkMode,
+} from '@/cctpChains';
 import { parseAmount } from '@/onchain-money';
 import { ChainRow } from './components/ChainRow';
 import { ChainPicker } from './components/ChainPicker';
 import { useFeeEstimates } from './hooks/useFeeEstimates';
 import type { ChainDestination, FeeQuote } from './components/types';
-
-const SOURCE_CHAIN_ID = 5042002;
-const MULTISEND_ADDRESS = (import.meta.env.VITE_MULTISEND_ADDRESS as `0x${string}` | undefined)
-  ?? '0x0000000000000000000000000000000000000000';
 
 const MULTISEND_ABI = [
   {
@@ -80,6 +82,12 @@ export default function App() {
   const { address, chainId, isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
 
+  const [networkMode, setNetworkMode] = useState<NetworkMode>('testnet');
+  const net = NETWORKS[networkMode];
+  const SOURCE_CHAIN_ID = net.sourceChainId;
+  const MULTISEND_ADDRESS = net.contractAddress;
+  const contractDeployed = MULTISEND_ADDRESS !== '0x0000000000000000000000000000000000000000';
+
   const [destinations, setDestinations] = useState<ChainDestination[]>([]);
   const [globalAmount, setGlobalAmount] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -87,6 +95,18 @@ export default function App() {
   const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>();
   const [sendTxHash, setSendTxHash] = useState<`0x${string}` | undefined>();
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'done'>('idle');
+
+  /** Switch testnet ↔ mainnet: clear all network-scoped state. */
+  function handleNetworkSwitch(mode: NetworkMode) {
+    if (mode === networkMode || step !== 'idle') return;
+    setNetworkMode(mode);
+    setDestinations([]);
+    setGlobalAmount('');
+    setPickerOpen(false);
+    setLoadingIndices(new Set());
+    setApproveTxHash(undefined);
+    setSendTxHash(undefined);
+  }
 
   const isWrongChain = isConnected && chainId !== SOURCE_CHAIN_ID;
   const sourceChain = requireChain(SOURCE_CHAIN_ID);
@@ -128,7 +148,14 @@ export default function App() {
     [],
   );
 
-  useFeeEstimates({ destinations, sourceChainId: SOURCE_CHAIN_ID, onUpdate: handleFeeUpdate });
+  useFeeEstimates({
+    destinations,
+    sourceChainId: SOURCE_CHAIN_ID,
+    networkMode,
+    quoteApiBase: net.quoteApiBase,
+    sourceDomain: net.sourceDomain,
+    onUpdate: handleFeeUpdate,
+  });
 
   // ── Totals ────────────────────────────────────────────────────────────────
 
@@ -196,13 +223,13 @@ export default function App() {
   const handleSend = useCallback(async () => {
     if (!address || !publicClient) return;
     if (isWrongChain) { switchChain({ chainId: SOURCE_CHAIN_ID }); return; }
-    if (MULTISEND_ADDRESS === '0x0000000000000000000000000000000000000000') {
+    if (!contractDeployed) {
       toast.error('Contract not deployed yet.');
       return;
     }
 
     const requests = destinations.map((dest) => {
-      const chain = getForwardingChain(dest.chainId)!;
+      const chain = getNetworkChain(networkMode, dest.chainId)!;
       const parsed = parseAmount(SOURCE_CHAIN_ID, dest.amount);
       const recipient = dest.recipient || address;
       return {
@@ -247,12 +274,11 @@ export default function App() {
       toast.error(parseOnchainError(e));
       setStep('idle');
     }
-  }, [address, publicClient, isWrongChain, switchChain, destinations, sourceUsdc, approveAsync, sendAsync]);
+  }, [address, publicClient, isWrongChain, switchChain, networkMode, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync]);
 
   const canSend =
     isConnected && !isWrongChain && destinations.length > 0 &&
-    totals.allQuotesReady && step === 'idle' &&
-    MULTISEND_ADDRESS !== '0x0000000000000000000000000000000000000000';
+    totals.allQuotesReady && step === 'idle' && contractDeployed;
 
   const isProcessing =
     step === 'approving' || step === 'sending' || isApprovePending || isSendPending ||
@@ -261,7 +287,7 @@ export default function App() {
   function ctaLabel() {
     if (!isConnected) return 'Connect Wallet';
     if (isWrongChain) return `Switch to ${sourceChain.name}`;
-    if (MULTISEND_ADDRESS === '0x0000000000000000000000000000000000000000') return 'Contract not deployed';
+    if (!contractDeployed) return 'Contract not deployed';
     if (step === 'approving' && (isApprovePending || isApproveConfirming))
       return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isApprovePending ? 'Approve in wallet...' : 'Approving USDC...'}</span>;
     if (step === 'sending' && (isSendPending || isSendConfirming))
@@ -302,6 +328,52 @@ export default function App() {
             </div>
             <ConnectKitButton />
           </div>
+
+          {/* Network toggle — Testnet / Mainnet */}
+          <div className="flex items-center gap-2">
+            <div
+              className="flex flex-1 rounded-2xl p-1"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+              role="tablist"
+              aria-label="Network"
+            >
+              {NETWORK_MODES.map((mode) => {
+                const active = mode === networkMode;
+                return (
+                  <button
+                    key={mode}
+                    role="tab"
+                    aria-selected={active}
+                    disabled={step !== 'idle'}
+                    onClick={() => handleNetworkSwitch(mode)}
+                    className="flex-1 rounded-xl py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                    style={active
+                      ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 2px 8px rgba(0,115,250,0.3)' }
+                      : { color: 'var(--muted)' }}
+                  >
+                    {NETWORKS[mode].label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mainnet guard — contract not deployed yet */}
+          {networkMode === 'mainnet' && !contractDeployed && (
+            <div
+              className="rounded-2xl px-4 py-3"
+              style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)' }}
+            >
+              <p className="text-xs font-semibold" style={{ color: '#b45309' }}>
+                Mainnet is preview-only right now
+              </p>
+              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--muted)' }}>
+                The MultiSend contract hasn't been deployed on Arc mainnet yet, so sending is
+                disabled here. You can browse chains and quotes — real sends stay on Testnet
+                until the contract is deployed.
+              </p>
+            </div>
+          )}
 
           {/* Source chain + balance — compact single row */}
           {isConnected && (
@@ -375,6 +447,7 @@ export default function App() {
           {/* Chain picker — opens below the row, above the list */}
           <ChainPicker
             open={pickerOpen}
+            chains={net.destinations}
             selectedIds={selectedIds}
             onToggle={handleToggleChain}
           />
@@ -389,7 +462,7 @@ export default function App() {
           {destinations.length > 0 && (
             <div className="space-y-3">
               {destinations.map((dest, index) => {
-                const chain = getForwardingChain(dest.chainId)!;
+                const chain = getNetworkChain(networkMode, dest.chainId)!;
                 return (
                   <ChainRow
                     key={dest.chainId}
@@ -445,7 +518,7 @@ export default function App() {
                 <div className="mt-3 space-y-1">
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--muted)' }}>Per-chain breakdown</p>
                   {destinations.map((dest, i) => {
-                    const chain = getForwardingChain(dest.chainId)!;
+                    const chain = getNetworkChain(networkMode, dest.chainId)!;
                     const feeDisplay = dest.feeQuote
                       ? `${(Number(dest.feeQuote.feeTotalAmount) / 1e18).toFixed(6)} USDC`
                       : loadingIndices.has(i) ? 'estimating...' : '—';
@@ -486,9 +559,9 @@ export default function App() {
                 </p>
                 <div className="space-y-2">
                   {destinations.map((dest) => {
-                    const chain = getForwardingChain(dest.chainId)!;
+                    const chain = getNetworkChain(networkMode, dest.chainId)!;
                     const recipient = dest.recipient || address || '';
-                    const url = recipient ? buildDestinationAddressUrl(dest.chainId, recipient) : undefined;
+                    const url = recipient ? buildDestinationAddressUrl(networkMode, dest.chainId, recipient) : undefined;
                     return (
                       <div
                         key={dest.chainId}

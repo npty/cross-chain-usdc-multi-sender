@@ -2,9 +2,15 @@
  * wagmi configuration
  * Built with Arc Studio — https://studio.arc.io
  *
- * All CCTP v2 Forwarding Service destination testnets are registered here
- * so the wallet can prompt users to switch networks and so wallet_watchAsset
- * and wallet_addEthereumChain work correctly.
+ * Arc (testnet + mainnet) source chains plus all CCTP v2 Forwarding Service
+ * destination chains are registered here so the wallet can prompt users to
+ * switch networks and so wallet_watchAsset and wallet_addEthereumChain work
+ * correctly.
+ *
+ * Testnet chains are custom-defined (matching src/cctpChains.ts).
+ * Mainnet chains reuse wagmi/viem exports, except Plume: wagmi's built-in
+ * `plume` chain is the legacy chain ID 98865 — the current Plume mainnet is
+ * 98866, so it's defined explicitly below.
  *
  * USDC addresses and RPCs sourced from:
  * https://developers.circle.com/stablecoins/usdc-contract-addresses
@@ -12,14 +18,32 @@
  */
 
 import { http, createConfig } from 'wagmi'
-import { mainnet } from 'wagmi/chains'
-import { arcTestnet } from 'viem/chains'
+import {
+  mainnet,
+  avalanche,
+  optimism,
+  arbitrum,
+  base,
+  polygon,
+  unichain,
+  linea,
+  codex,
+  sonic,
+  worldchain,
+  monad,
+  sei,
+  xdc,
+  hyperEvm,
+  ink,
+} from 'wagmi/chains'
+import { arcTestnet, arc } from 'viem/chains'
 import { injected } from 'wagmi/connectors'
 import { defineChain } from 'viem'
 import { registerChain } from './tracing'
 
-// Pre-register Arc Testnet RPC for trace events
+// Pre-register Arc RPCs for trace events
 registerChain(arcTestnet.id, arcTestnet.rpcUrls.default.http[0])
+registerChain(arc.id, arc.rpcUrls.default.http[0])
 
 // ── Destination chains (CCTP v2 Forwarding Service testnets) ──────────────────
 
@@ -156,12 +180,30 @@ export const DEST_CHAINS = [
   inkSepolia, plumeTestnet, edgeTestnet,
 ] as const
 
+// ── Mainnet destination chains (CCTP v2 Forwarding Service) ─────────────────
+// NOTE: Plume is defined explicitly — wagmi's built-in `plume` is the legacy
+// chain ID 98865; current Plume mainnet is 98866 (verified 2026-09-27).
+
+const plumeMainnet = defineChain({
+  id: 98866,
+  name: 'Plume',
+  nativeCurrency: { name: 'Plume', symbol: 'PLUME', decimals: 18 },
+  rpcUrls: { default: { http: ['https://rpc.plume.org'] } },
+  blockExplorers: { default: { name: 'Plume Explorer', url: 'https://explorer.plume.org' } },
+})
+
+export const MAINNET_DEST_CHAINS = [
+  mainnet, avalanche, optimism, arbitrum, base, polygon,
+  unichain, linea, codex, sonic, worldchain, monad,
+  sei, xdc, hyperEvm, ink, plumeMainnet,
+] as const
+
 export const config = createConfig({
-  chains: [arcTestnet, mainnet, ...DEST_CHAINS],
+  chains: [arcTestnet, arc, ...DEST_CHAINS, ...MAINNET_DEST_CHAINS],
   connectors: [injected()],
   transports: {
     [arcTestnet.id]: http(),
-    [mainnet.id]: http(),
+    [arc.id]: http(),
     [ethereumSepolia.id]: http(),
     [avalancheFuji.id]: http(),
     [opSepolia.id]: http(),
@@ -176,5 +218,22 @@ export const config = createConfig({
     [inkSepolia.id]: http(),
     [plumeTestnet.id]: http(),
     [edgeTestnet.id]: http(),
+    [mainnet.id]: http(),
+    [avalanche.id]: http(),
+    [optimism.id]: http(),
+    [arbitrum.id]: http(),
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [unichain.id]: http(),
+    [linea.id]: http(),
+    [codex.id]: http(),
+    [sonic.id]: http(),
+    [worldchain.id]: http(),
+    [monad.id]: http(),
+    [sei.id]: http(),
+    [xdc.id]: http(),
+    [hyperEvm.id]: http(),
+    [ink.id]: http(),
+    [plumeMainnet.id]: http(),
   },
 })

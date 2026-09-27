@@ -1,14 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { parseAmount } from '@/onchain-money';
-import { getForwardingChain } from '@/cctpChains';
+import { getNetworkChain, type NetworkMode } from '@/cctpChains';
 import type { ChainDestination, FeeQuote, FeeQuoteItem } from '../components/types';
 
-// CCTP v2 Quote API — testnet base URL
+// CCTP v2 Quote API — base URL is network-scoped (sandbox for testnet,
+// production for mainnet). See NETWORKS in '@/cctpChains'.
 // POST /v2/quote/burn/usdc/{sourceDomainId}/{destDomainId}
-const QUOTE_API_BASE = 'https://iris-api-sandbox.circle.com';
-
-// Arc Testnet CCTP domain
-const SOURCE_DOMAIN = 26;
 
 // ── API types (from OpenAPI spec) ────────────────────────────────────────────
 
@@ -70,6 +67,8 @@ async function callQuoteApi(
 }
 
 async function fetchQuote(
+  quoteApiBase: string,
+  sourceDomain: number,
   destDomain: number,
   amountHuman: string, // human-readable USDC
   sourceChainId: number,
@@ -84,7 +83,7 @@ async function fetchQuote(
     return { quote: null, error: 'Invalid amount' };
   }
 
-  const url = `${QUOTE_API_BASE}/v2/quote/burn/usdc/${SOURCE_DOMAIN}/${destDomain}`;
+  const url = `${quoteApiBase}/v2/quote/burn/usdc/${sourceDomain}/${destDomain}`;
 
   // Try FORWARD + PRE_FINALITY first; fall back to FORWARD-only when
   // PRE_FINALITY is unavailable on this route (errorCode PRE_FINALITY_UNAVAILABLE, HTTP 422).
@@ -140,10 +139,13 @@ async function fetchQuote(
 interface UseFeeEstimatesOptions {
   destinations: ChainDestination[];
   sourceChainId: number;
+  networkMode: NetworkMode;
+  quoteApiBase: string;
+  sourceDomain: number;
   onUpdate: (index: number, quote: FeeQuote | null, error: string | null, loading: boolean) => void;
 }
 
-export function useFeeEstimates({ destinations, sourceChainId, onUpdate }: UseFeeEstimatesOptions) {
+export function useFeeEstimates({ destinations, sourceChainId, networkMode, quoteApiBase, sourceDomain, onUpdate }: UseFeeEstimatesOptions) {
   const timerRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const abortRefs = useRef<Map<number, AbortController>>(new Map());
 
@@ -163,7 +165,7 @@ export function useFeeEstimates({ destinations, sourceChainId, onUpdate }: UseFe
 
       // Debounce 600ms so we don't hammer the API on every keystroke
       const timer = setTimeout(() => {
-        const chain = getForwardingChain(dest.chainId);
+        const chain = getNetworkChain(networkMode, dest.chainId);
         if (!chain) {
           onUpdate(index, null, 'Chain not supported for CCTP forwarding', false);
           return;
@@ -173,7 +175,7 @@ export function useFeeEstimates({ destinations, sourceChainId, onUpdate }: UseFe
         abortRefs.current.set(index, controller);
         onUpdate(index, null, null, true);
 
-        fetchQuote(chain.cctpDomain!, amount, sourceChainId, controller.signal)
+        fetchQuote(quoteApiBase, sourceDomain, chain.cctpDomain!, amount, sourceChainId, controller.signal)
           .then((result) => {
             if (!controller.signal.aborted) {
               onUpdate(index, result.quote, result.error, false);
@@ -187,7 +189,7 @@ export function useFeeEstimates({ destinations, sourceChainId, onUpdate }: UseFe
 
       timerRefs.current.set(index, timer);
     },
-    [sourceChainId, onUpdate],
+    [networkMode, quoteApiBase, sourceDomain, sourceChainId, onUpdate],
   );
 
   // Re-run when destinations change (keyed by chainId + amount to avoid object identity churn)

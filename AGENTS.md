@@ -21,7 +21,16 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 
 ## Environment Variables
 
-- `VITE_MULTISEND_ADDRESS` — MultiChainUSDCSend contract address (set in .env)
+- `VITE_MULTISEND_ADDRESS` — MultiChainUSDCSend contract address on Arc Testnet (set in .env)
+- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend contract address on Arc mainnet. Leave as zero address until the contract is reviewed and deployed to mainnet; Mainnet mode shows as preview-only while unset.
+
+## Networks
+
+- The UI has a Testnet / Mainnet segmented toggle (defaults to Testnet). Switching clears all selections and transaction state.
+- Source chain is Arc in both modes: Arc Testnet (5042002) / Arc mainnet (5042), CCTP domain 26 for both.
+- Destinations follow the Forwarding Service ✅ list at https://developers.circle.com/cctp/concepts/supported-chains-and-domains — 14 testnets, 17 mainnet EVM chains (excludes Arc as source, Solana as non-EVM, EDGE mainnet whose chain ID couldn't be verified).
+- Quote API: `https://iris-api-sandbox.circle.com` (testnet) / `https://iris-api.circle.com` (mainnet).
+- Chain data lives in `src/cctpChains.ts` (`NETWORKS` record); wagmi chain registration in `src/config.ts`. Note: wagmi's built-in `plume` is the legacy chain ID 98865 — the app defines Plume mainnet explicitly as 98866.
 
 ## Tech Stack
 

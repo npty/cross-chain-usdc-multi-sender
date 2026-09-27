@@ -3,10 +3,11 @@
  * Replaces the modal bottom-sheet for a faster, less intrusive UX.
  */
 import { motion, AnimatePresence } from 'framer-motion';
-import { FORWARDING_DEST_CHAINS } from '@/cctpChains';
+import type { OnchainChain } from '@/onchain-facts';
 
 interface ChainPickerProps {
   open: boolean;
+  chains: OnchainChain[];
   selectedIds: number[];
   onToggle: (chainId: number) => void;
 }
@@ -15,10 +16,21 @@ const ACCENT_PALETTE = [
   '#6366f1', '#3b82f6', '#06b6d4', '#10b981',
   '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
   '#14b8a6', '#f97316', '#84cc16', '#a855f7',
-  '#0ea5e9', '#64748b',
+  '#0ea5e9', '#64748b', '#22d3ee', '#fb7185',
+  '#4ade80',
 ];
 
-export function ChainPicker({ open, selectedIds, onToggle }: ChainPickerProps) {
+function shortName(name: string): string {
+  return name
+    .replace(' Testnet', '')
+    .replace(' Sepolia', '')
+    .replace(' Mainnet', '')
+    .replace(' Fuji', '')
+    .replace(' Amoy', '')
+    .replace(' Blaze', '');
+}
+
+export function ChainPicker({ open, chains, selectedIds, onToggle }: ChainPickerProps) {
   return (
     <AnimatePresence>
       {open && (
@@ -39,7 +51,7 @@ export function ChainPicker({ open, selectedIds, onToggle }: ChainPickerProps) {
             Select destination chains
           </p>
           <div className="flex flex-wrap gap-2">
-            {FORWARDING_DEST_CHAINS.map((chain, i) => {
+            {chains.map((chain, i) => {
               const selected = selectedIds.includes(chain.chainId);
               const color = ACCENT_PALETTE[i % ACCENT_PALETTE.length];
               return (
@@ -68,7 +80,7 @@ export function ChainPicker({ open, selectedIds, onToggle }: ChainPickerProps) {
                   >
                     {chain.name.slice(0, 2).toUpperCase()}
                   </span>
-                  {chain.name.replace(' Testnet', '').replace(' Sepolia', '').replace(' Fuji', '').replace(' Amoy', '').replace(' Blaze', '')}
+                  {shortName(chain.name)}
                 </button>
               );
             })}

@@ -1,18 +1,17 @@
 import { X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FORWARDING_DEST_CHAINS } from '@/cctpChains';
-
-const SUPPORTED = FORWARDING_DEST_CHAINS;
+import type { OnchainChain } from '@/onchain-facts';
 
 interface AddChainModalProps {
   open: boolean;
+  chains: OnchainChain[];
   onClose: () => void;
   selectedIds: number[];
   onAdd: (chainId: number) => void;
 }
 
-export function AddChainModal({ open, onClose, selectedIds, onAdd }: AddChainModalProps) {
-  const available = SUPPORTED.filter((c) => !selectedIds.includes(c.chainId));
+export function AddChainModal({ open, chains, onClose, selectedIds, onAdd }: AddChainModalProps) {
+  const available = chains.filter((c) => !selectedIds.includes(c.chainId));
 
   return (
     <AnimatePresence>
