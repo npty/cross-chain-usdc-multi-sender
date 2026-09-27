@@ -456,6 +456,18 @@ const MAINNET_DEST_CHAINS: OnchainChain[] = [
     usdc: { symbol: 'USDC', address: '0x3600000000000000000000000000000000000000', decimals: 6 },
     cctpDomain: 26,
   },
+  {
+    // Solana — non-EVM destination (CCTP domain 5). chainId is a sentinel;
+    // Solana has no EVM chain ID. Recipient addresses are base58.
+    chainId: 999999999,
+    name: 'Solana',
+    isTestnet: false,
+    isNonEvm: true,
+    explorerBase: 'https://solscan.io',
+    rpcUrls: [],
+    nativeCurrency: { symbol: 'SOL', decimals: 9, isUsdc: false },
+    cctpDomain: 5,
+  },
 ];
 
 // ── Network configs ──────────────────────────────────────────────────────────
@@ -589,5 +601,8 @@ export function buildDestinationAddressUrl(
 ): string | undefined {
   const chain = getNetworkChain(mode, chainId);
   if (!chain?.explorerBase) return undefined;
-  return `${chain.explorerBase.replace(/\/+$/, '')}/address/${address}`;
+  const base = chain.explorerBase.replace(/\/+$/, '');
+  // Solscan uses /account/ instead of /address/
+  const path = chain.isNonEvm ? 'account' : 'address';
+  return `${base}/${path}/${address}`;
 }

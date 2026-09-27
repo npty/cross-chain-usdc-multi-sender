@@ -8,6 +8,7 @@ interface ChainRowProps {
   chain: OnchainChain;
   index: number;
   onRemove: (index: number) => void;
+  onRecipientChange: (index: number, recipient: string) => void;
   isLoading: boolean;
 }
 
@@ -79,7 +80,7 @@ async function addToken(chain: OnchainChain & { rpcUrls?: string[] }): Promise<v
   });
 }
 
-export function ChainRow({ dest, chain, index, onRemove, isLoading }: ChainRowProps) {
+export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLoading }: ChainRowProps) {
   const quote = dest.feeQuote;
   const hasAmount = !!dest.amount && parseFloat(dest.amount) > 0;
 
@@ -92,7 +93,8 @@ export function ChainRow({ dest, chain, index, onRemove, isLoading }: ChainRowPr
     (expStr !== '' && !expStr.includes('m') && parseInt(expStr) <= 30);
 
   return (
-    <div style={row} className="px-3 py-2.5 flex items-center gap-3">
+    <div style={row} className="px-3 py-2.5">
+      <div className="flex items-center gap-3">
 
       {/* Chain avatar */}
       <div
@@ -174,6 +176,24 @@ export function ChainRow({ dest, chain, index, onRemove, isLoading }: ChainRowPr
       >
         <X className="size-3.5" />
       </button>
+      </div>
+      {chain.isNonEvm && (
+        <div className="pt-2">
+          <input
+            value={dest.recipient}
+            onChange={(e) => onRecipientChange(index, e.target.value.trim())}
+            placeholder="Solana address (base58)"
+            spellCheck={false}
+            autoComplete="off"
+            className="w-full rounded-lg px-2.5 py-1.5 text-xs mono outline-none"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              color: 'var(--ink)',
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

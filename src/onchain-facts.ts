@@ -42,6 +42,8 @@ export interface OnchainChain {
   cctpDomain?: number;
   /** Circle SCP blockchain enum. Absent unless the deploy tool supports the chain. */
   scpBlockchain?: string;
+  /** True for non-EVM chains (e.g. Solana). Addresses are not 0x-hex. */
+  isNonEvm?: boolean;
 }
 
 export interface ProtocolContractFact {

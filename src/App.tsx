@@ -10,6 +10,7 @@ import {
 } from 'wagmi';
 import { ConnectKitButton } from 'connectkit';
 import { erc20Abi } from 'viem';
+import bs58 from 'bs58';
 import { Plus, ArrowRight, Loader2, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -108,7 +109,21 @@ const PERMIT_TYPES = {
 } as const;
 
 function addrToBytes32(address: string): `0x${string}` {
+  // Solana (non-EVM): base58-encoded 32-byte public key
+  if (!address.startsWith('0x')) {
+    const decoded = bs58.decode(address);
+    if (decoded.length !== 32) throw new Error('Invalid Solana address');
+    return `0x${Buffer.from(decoded).toString('hex')}`;
+  }
   return `0x${address.replace('0x', '').padStart(64, '0')}`;
+}
+
+function isValidSolanaAddress(address: string): boolean {
+  try {
+    return bs58.decode(address).length === 32;
+  } catch {
+    return false;
+  }
 }
 
 const glass = {
@@ -271,7 +286,8 @@ export default function App() {
         {
           chainId: cId,
           amount: globalAmount,
-          recipient: address ?? '',
+          // Non-EVM chains (Solana) need a native address — don't default to the EVM wallet
+          recipient: getNetworkChain(networkMode, cId)?.isNonEvm ? '' : (address ?? ''),
           feeQuote: null,
           feeError: null,
         },
@@ -293,12 +309,30 @@ export default function App() {
     setDestinations((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function handleRecipientChange(index: number, recipient: string) {
+    setDestinations((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, recipient, feeQuote: null, feeError: null } : d)),
+    );
+  }
+
   const handleSend = useCallback(async () => {
     if (!address || !publicClient) return;
     if (isWrongChain) { switchChain({ chainId: SOURCE_CHAIN_ID }); return; }
     if (!contractDeployed) {
       toast.error('Contract not deployed yet.');
       return;
+    }
+
+    // Validate non-EVM (Solana) recipients before building requests
+    for (const dest of destinations) {
+      const chain = getNetworkChain(networkMode, dest.chainId)!;
+      if (chain.isNonEvm) {
+        const recipient = dest.recipient || address;
+        if (!isValidSolanaAddress(recipient)) {
+          toast.error(`Invalid Solana address for ${chain.name}. Enter a valid base58 address.`);
+          return;
+        }
+      }
     }
 
     const requests = destinations.map((dest) => {
@@ -630,6 +664,7 @@ export default function App() {
                     chain={chain}
                     index={index}
                     onRemove={handleRemove}
+                    onRecipientChange={handleRecipientChange}
                     isLoading={loadingIndices.has(index)}
                   />
                 );
