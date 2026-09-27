@@ -6,11 +6,16 @@
  * - USDC addresses: https://developers.circle.com/stablecoins/usdc-contract-addresses
  *
  * The docs page lists 20 chains with Forwarding Service = ✅. Coverage here:
- * - Arc → the SOURCE chain (one per network), excluded from destinations.
+ * - Arc → a SOURCE chain on both networks, and a destination when the source
+ *   is another chain (the picker filters out whichever chain is the source).
  * - Solana → non-EVM, not supported by this EVM wallet flow.
  * - EDGE mainnet → chain ID could not be verified from any source, excluded
  *   (EDGE Testnet remains available in testnet mode).
  * - The remaining 17 EVM chains are all included as mainnet destinations.
+ *
+ * Sources (deployed 2026-09-27): Arc, Arbitrum, Avalanche, Base on mainnet;
+ * Arc Testnet on testnet. All mainnet sources run the v3 contract with
+ * EIP-2612 permitAndMultiSend.
  *
  * Testnet destinations (18): every EVM testnet Circle lists with CCTP V2
  * contracts deployed — the 13 from before plus Unichain Sepolia, Codex
@@ -439,55 +444,128 @@ const MAINNET_DEST_CHAINS: OnchainChain[] = [
     usdc: { symbol: 'USDC', address: '0x222365EF19F7947e5484218551B56bb3965Aa7aF', decimals: 6 },
     cctpDomain: 22,
   },
+  {
+    // Arc mainnet — a destination when the source is another chain
+    // (filtered out of the picker when Arc itself is the source).
+    chainId: 5042,
+    name: 'Arc',
+    isTestnet: false,
+    explorerBase: 'https://explorer.arc.io',
+    rpcUrls: ['https://rpc.arc.network'],
+    nativeCurrency: { symbol: 'USDC', decimals: 18, isUsdc: true },
+    usdc: { symbol: 'USDC', address: '0x3600000000000000000000000000000000000000', decimals: 6 },
+    cctpDomain: 26,
+  },
 ];
 
 // ── Network configs ──────────────────────────────────────────────────────────
 
-export interface NetworkConfig {
-  mode: NetworkMode;
+export interface SourceChain {
+  /** EVM chain ID of the source chain. */
+  chainId: number;
+  /** Short display label, e.g. 'Arc', 'Arbitrum'. */
   label: string;
-  /** Arc chain ID the sends originate from. */
-  sourceChainId: number;
-  /** CCTP domain of the Arc source chain (26 for both Arc networks). */
-  sourceDomain: number;
-  /** Circle quote API base (sandbox for testnet, production for mainnet). */
-  quoteApiBase: string;
-  /** MultiChainUSDCSend contract on the Arc source chain. Zero address = not deployed → sends disabled. */
+  /** CCTP domain of the source chain. */
+  cctpDomain: number;
+  /** MultiChainUSDCSend contract on this source chain. Zero address = not deployed → sends disabled. */
   contractAddress: `0x${string}`;
+  /** EIP-2612 domain name of this chain's USDC (verified on-chain). */
+  permitName: string;
+  /** EIP-2612 domain version of this chain's USDC (verified on-chain). */
+  permitVersion: string;
   /**
    * Whether the deployed contract supports EIP-2612 permit (permitAndMultiSend).
    * When false the app falls back to a separate approve transaction.
    */
   supportsPermit: boolean;
+}
+
+export interface NetworkConfig {
+  mode: NetworkMode;
+  label: string;
+  /** Circle quote API base (sandbox for testnet, production for mainnet). */
+  quoteApiBase: string;
+  /** Source chains the user can send from on this network. */
+  sources: SourceChain[];
   /** Forwarding Service destination chains for this network. */
   destinations: OnchainChain[];
 }
 
-function envAddress(name: string): `0x${string}` {
+function envAddress(name: string, fallback: `0x${string}` = ZERO_ADDRESS): `0x${string}` {
   const v = import.meta.env[name] as string | undefined;
-  return (v && v.startsWith('0x') ? v : ZERO_ADDRESS) as `0x${string}`;
+  return (v && v.startsWith('0x') ? v : fallback) as `0x${string}`;
 }
 
 export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
   testnet: {
     mode: 'testnet',
     label: 'Testnet',
-    sourceChainId: 5042002,
-    sourceDomain: 26,
     quoteApiBase: 'https://iris-api-sandbox.circle.com',
-    contractAddress: envAddress('VITE_MULTISEND_ADDRESS'),
+    sources: [
+      {
+        chainId: 5042002,
+        label: 'Arc',
+        cctpDomain: 26,
+        contractAddress: envAddress('VITE_MULTISEND_ADDRESS'),
+        permitName: 'USDC',
+        permitVersion: '2',
+        supportsPermit: false,
+      },
+    ],
     destinations: TESTNET_DEST_CHAINS,
-    supportsPermit: false,
   },
   mainnet: {
     mode: 'mainnet',
     label: 'Mainnet',
-    sourceChainId: 5042,
-    sourceDomain: 26,
     quoteApiBase: 'https://iris-api.circle.com',
-    contractAddress: envAddress('VITE_MULTISEND_ADDRESS_MAINNET'),
+    sources: [
+      {
+        chainId: 5042,
+        label: 'Arc',
+        cctpDomain: 26,
+        contractAddress: envAddress('VITE_MULTISEND_ADDRESS_MAINNET'),
+        permitName: 'USDC',
+        permitVersion: '2',
+        supportsPermit: true,
+      },
+      {
+        chainId: 42161,
+        label: 'Arbitrum',
+        cctpDomain: 3,
+        contractAddress: envAddress(
+          'VITE_MULTISEND_ADDRESS_ARBITRUM',
+          '0x0032a5147f96039b62d08f651884aa58cfa30772',
+        ),
+        permitName: 'USD Coin',
+        permitVersion: '2',
+        supportsPermit: true,
+      },
+      {
+        chainId: 43114,
+        label: 'Avalanche',
+        cctpDomain: 1,
+        contractAddress: envAddress(
+          'VITE_MULTISEND_ADDRESS_AVALANCHE',
+          '0x24293d51ab51fa8c7e7e3e6920ea7262a0214100',
+        ),
+        permitName: 'USD Coin',
+        permitVersion: '2',
+        supportsPermit: true,
+      },
+      {
+        chainId: 8453,
+        label: 'Base',
+        cctpDomain: 6,
+        contractAddress: envAddress(
+          'VITE_MULTISEND_ADDRESS_BASE',
+          '0x0032a5147f96039b62d08f651884aa58cfa30772',
+        ),
+        permitName: 'USD Coin',
+        permitVersion: '2',
+        supportsPermit: true,
+      },
+    ],
     destinations: MAINNET_DEST_CHAINS,
-    supportsPermit: true,
   },
 };
 

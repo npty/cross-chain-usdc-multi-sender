@@ -127,8 +127,10 @@ export default function App() {
 
   const [networkMode, setNetworkMode] = useState<NetworkMode>('testnet');
   const net = NETWORKS[networkMode];
-  const SOURCE_CHAIN_ID = net.sourceChainId;
-  const MULTISEND_ADDRESS = net.contractAddress;
+  const [sourceChainId, setSourceChainId] = useState<number>(NETWORKS.testnet.sources[0].chainId);
+  const source = net.sources.find((s) => s.chainId === sourceChainId) ?? net.sources[0];
+  const SOURCE_CHAIN_ID = source.chainId;
+  const MULTISEND_ADDRESS = source.contractAddress;
   const contractDeployed = MULTISEND_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
   const [destinations, setDestinations] = useState<ChainDestination[]>([]);
@@ -140,21 +142,41 @@ export default function App() {
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'done'>('idle');
 
   /**
-   * Switch testnet ↔ mainnet: clear all network-scoped state and move the
-   * wallet to the new source chain automatically.
+   * Switch testnet ↔ mainnet: reset to that network's default source, clear all
+   * network-scoped state, and move the wallet to the new source chain
+   * automatically.
    */
   function handleNetworkSwitch(mode: NetworkMode) {
     if (mode === networkMode || step !== 'idle') return;
+    const nextSource = NETWORKS[mode].sources[0];
     setNetworkMode(mode);
+    setSourceChainId(nextSource.chainId);
     setDestinations([]);
     setGlobalAmount('');
     setPickerOpen(false);
     setLoadingIndices(new Set());
     setApproveTxHash(undefined);
     setSendTxHash(undefined);
-    const targetChainId = NETWORKS[mode].sourceChainId;
-    if (isConnected && chainId !== targetChainId) {
-      switchChain({ chainId: targetChainId });
+    if (isConnected && chainId !== nextSource.chainId) {
+      switchChain({ chainId: nextSource.chainId });
+    }
+  }
+
+  /**
+   * Switch the source chain (mainnet): clear all source-scoped state and move
+   * the wallet to the new source chain automatically.
+   */
+  function handleSourceSwitch(nextChainId: number) {
+    if (nextChainId === sourceChainId || step !== 'idle') return;
+    setSourceChainId(nextChainId);
+    setDestinations([]);
+    setGlobalAmount('');
+    setPickerOpen(false);
+    setLoadingIndices(new Set());
+    setApproveTxHash(undefined);
+    setSendTxHash(undefined);
+    if (isConnected && chainId !== nextChainId) {
+      switchChain({ chainId: nextChainId });
     }
   }
 
@@ -204,7 +226,7 @@ export default function App() {
     sourceChainId: SOURCE_CHAIN_ID,
     networkMode,
     quoteApiBase: net.quoteApiBase,
-    sourceDomain: net.sourceDomain,
+    sourceDomain: source.cctpDomain,
     onUpdate: handleFeeUpdate,
   });
 
@@ -298,7 +320,7 @@ export default function App() {
       setApproveTxHash(undefined);
       setSendTxHash(undefined);
 
-      if (net.supportsPermit) {
+      if (source.supportsPermit) {
         // Gasless approval: sign an EIP-2612 permit off-chain (free), then the
         // contract executes permit + multi-send in a single transaction.
         setStep('approving');
@@ -311,8 +333,8 @@ export default function App() {
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800); // 30 min
         const signature = await signTypedDataAsync({
           domain: {
-            name: 'USDC',
-            version: '2',
+            name: source.permitName,
+            version: source.permitVersion,
             chainId: SOURCE_CHAIN_ID,
             verifyingContract: sourceUsdc.address as `0x${string}`,
           },
@@ -326,8 +348,8 @@ export default function App() {
             deadline,
           },
         });
-        const r = `0x${signature.slice(2, 66)}` as `0x${string}`;
-        const s = `0x${signature.slice(66, 130)}` as `0x${string}`;
+        const r = `0x${signature.slice(2, 66)}`;
+        const s = `0x${signature.slice(66, 130)}`;
         const v = parseInt(signature.slice(130, 132), 16);
 
         setStep('sending');
@@ -372,7 +394,7 @@ export default function App() {
       toast.error(parseOnchainError(e));
       setStep('idle');
     }
-  }, [address, publicClient, isWrongChain, switchChain, networkMode, net, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync]);
+  }, [address, publicClient, isWrongChain, switchChain, networkMode, net, source, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync]);
 
   const canSend =
     isConnected && !isWrongChain && destinations.length > 0 &&
@@ -387,7 +409,7 @@ export default function App() {
     if (isWrongChain) return `Switch to ${sourceChain.name}`;
     if (!contractDeployed) return 'Contract not deployed';
     if (step === 'approving') {
-      if (net.supportsPermit)
+      if (source.supportsPermit)
         return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isSignPending ? 'Sign permit in wallet...' : 'Preparing permit...'}</span>;
       if (isApprovePending || isApproveConfirming)
         return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isApprovePending ? 'Approve in wallet...' : 'Approving USDC...'}</span>;
@@ -467,12 +489,12 @@ export default function App() {
               style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)' }}
             >
               <p className="text-xs font-semibold" style={{ color: '#b45309' }}>
-                Mainnet is preview-only right now
+                Sending from {source.label} isn't live yet
               </p>
               <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--muted)' }}>
-                The MultiSend contract hasn't been deployed on Arc mainnet yet, so sending is
-                disabled here. You can browse chains and quotes — real sends stay on Testnet
-                until the contract is deployed.
+                The MultiSend contract hasn't been deployed on {source.label} yet, so sending is
+                disabled here. You can browse chains and quotes — switch to another source chain
+                to send.
               </p>
             </div>
           )}
@@ -484,10 +506,29 @@ export default function App() {
               style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
             >
               <div className="flex items-center gap-2">
-                <div className="flex size-7 items-center justify-center rounded-full text-white text-xs font-bold" style={{ background: 'var(--accent)' }}>AR</div>
+                <div className="flex size-7 items-center justify-center rounded-full text-white text-xs font-bold" style={{ background: 'var(--accent)' }}>
+                  {source.label.slice(0, 2).toUpperCase()}
+                </div>
                 <div>
                   <p className="text-xs font-semibold leading-none" style={{ color: 'var(--muted)' }}>Source</p>
-                  <p className="text-sm font-bold leading-tight" style={{ color: 'var(--ink)' }}>{sourceChain.name}</p>
+                  {net.sources.length > 1 ? (
+                    <select
+                      value={sourceChainId}
+                      onChange={(e) => handleSourceSwitch(Number(e.target.value))}
+                      disabled={step !== 'idle'}
+                      aria-label="Source chain"
+                      className="text-sm font-bold leading-tight bg-transparent outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ color: 'var(--ink)' }}
+                    >
+                      {net.sources.map((s) => (
+                        <option key={s.chainId} value={s.chainId} style={{ color: '#000' }}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-sm font-bold leading-tight" style={{ color: 'var(--ink)' }}>{sourceChain.name}</p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
@@ -500,7 +541,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => switchChain({ chainId: SOURCE_CHAIN_ID })}
-                  title="Switch to Arc"
+                  title={`Switch to ${source.label}`}
                   className="ml-2 cursor-pointer rounded-lg px-2 py-1 text-xs font-medium"
                   style={{ background: 'rgba(186,43,76,0.08)', color: 'var(--danger)' }}
                 >
@@ -555,7 +596,7 @@ export default function App() {
           {/* Chain picker — opens below the row, above the list */}
           <ChainPicker
             open={pickerOpen}
-            chains={net.destinations}
+            chains={net.destinations.filter((d) => d.chainId !== source.chainId)}
             selectedIds={selectedIds}
             onToggle={handleToggleChain}
           />
