@@ -244,6 +244,19 @@ const TESTNET_EXTRA_CHAINS: OnchainChain[] = [
     },
     cctpDomain: 19,
   },
+  {
+    // CCTP domain 5 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // Solana Devnet — non-EVM destination. chainId is a sentinel;
+    // Solana has no EVM chain ID. Recipient addresses are base58.
+    chainId: 999999999,
+    name: 'Solana Devnet',
+    isTestnet: true,
+    isNonEvm: true,
+    explorerBase: 'https://solscan.io',
+    rpcUrls: [],
+    nativeCurrency: { symbol: 'SOL', decimals: 9, isUsdc: false },
+    cctpDomain: 5,
+  },
 ];
 
 /** All EVM CCTP v2 Forwarding Service destination testnets (Arc Testnet is the source). */
@@ -255,7 +268,7 @@ const TESTNET_DEST_CHAINS: OnchainChain[] = [
   ),
   ...TESTNET_EXTRA_CHAINS,
 ].filter(
-  (c) => c.cctpDomain !== undefined && c.usdc !== undefined && c.chainId !== 5042002,
+  (c) => c.cctpDomain !== undefined && (c.usdc !== undefined || c.isNonEvm) && c.chainId !== 5042002,
 );
 
 // ── Mainnet ──────────────────────────────────────────────────────────────────
