@@ -1,5 +1,8 @@
 import type React from 'react';
 import { X, PlusCircle, Loader2 } from 'lucide-react';
+import { PublicKey } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
+import bs58 from 'bs58';
 import type { ChainDestination } from './types';
 import type { OnchainChain } from '@/onchain-facts';
 
@@ -177,12 +180,12 @@ export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLo
         <X className="size-3.5" />
       </button>
       </div>
-      {chain.isNonEvm && (
+      {chain.isNonEvm && chain.solanaUsdcMint && (
         <div className="pt-2">
           <input
             value={dest.recipient}
             onChange={(e) => onRecipientChange(index, e.target.value.trim())}
-            placeholder="Solana address (base58)"
+            placeholder="Solana wallet address (base58)"
             spellCheck={false}
             autoComplete="off"
             className="w-full rounded-lg px-2.5 py-1.5 text-xs mono outline-none"
@@ -192,8 +195,34 @@ export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLo
               color: 'var(--ink)',
             }}
           />
+          {(() => {
+            // Show the derived USDC token account (ATA) so the user knows
+            // exactly where funds will land. Circle mints to the ATA, not the wallet.
+            try {
+              if (!dest.recipient || !isValidSolana(dest.recipient)) return null;
+              const ata = getAssociatedTokenAddressSync(
+                new PublicKey(chain.solanaUsdcMint),
+                new PublicKey(dest.recipient),
+              ).toBase58();
+              return (
+                <div className="pt-1 text-[11px] mono break-all" style={{ color: 'var(--subtle)' }}>
+                  USDC token account: {ata}
+                </div>
+              );
+            } catch {
+              return null;
+            }
+          })()}
         </div>
       )}
     </div>
   );
+}
+
+function isValidSolana(address: string): boolean {
+  try {
+    return bs58.decode(address).length === 32;
+  } catch {
+    return false;
+  }
 }

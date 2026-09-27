@@ -11,6 +11,8 @@ import {
 import { ConnectKitButton } from 'connectkit';
 import { erc20Abi, bytesToHex } from 'viem';
 import bs58 from 'bs58';
+import { PublicKey, Connection } from '@solana/web3.js';
+import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Plus, ArrowRight, Loader2, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -124,6 +126,40 @@ function isValidSolanaAddress(address: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Resolve the CCTP mintRecipient for a Solana destination.
+ * Circle requires the recipient's USDC token account (ATA), NOT the wallet address.
+ * - If the entered address is already a USDC token account, use it directly.
+ * - Otherwise derive the ATA from the wallet address + USDC mint.
+ * The Forwarding Service creates the ATA on-chain if it doesn't exist yet.
+ */
+async function resolveSolanaMintRecipient(
+  solanaUsdcMint: string,
+  solanaRpcUrl: string,
+  walletAddress: string,
+): Promise<`0x${string}`> {
+  const entered = new PublicKey(walletAddress);
+
+  // If the user pasted a token account directly, use it as-is.
+  // (Deriving an ATA from a token-account address would lose funds.)
+  try {
+    const connection = new Connection(solanaRpcUrl, 'confirmed');
+    const info = await connection.getParsedAccountInfo(entered);
+    const data = info.value?.data;
+    if (data && typeof data === 'object' && 'parsed' in data) {
+      const parsedInfo = (data as { parsed: { info: { mint?: string } } }).parsed.info;
+      if (parsedInfo.mint === solanaUsdcMint) {
+        return bytesToHex(entered.toBytes());
+      }
+    }
+  } catch {
+    // RPC unreachable — fall through to ATA derivation.
+  }
+
+  const ata = getAssociatedTokenAddressSync(new PublicKey(solanaUsdcMint), entered);
+  return bytesToHex(ata.toBytes());
 }
 
 const glass = {
@@ -337,18 +373,23 @@ export default function App() {
       }
     }
 
-    const requests = destinations.map((dest) => {
+    const requests = await Promise.all(destinations.map(async (dest) => {
       const chain = getNetworkChain(networkMode, dest.chainId)!;
       const parsed = parseAmount(SOURCE_CHAIN_ID, dest.amount);
       const recipient = dest.recipient || address;
+      // Solana destinations: mintRecipient must be the USDC token account (ATA),
+      // not the wallet address. The Forwarding Service creates the ATA if needed.
+      const mintRecipient = chain.isNonEvm
+        ? await resolveSolanaMintRecipient(chain.solanaUsdcMint!, chain.rpcUrls[0], recipient)
+        : addrToBytes32(recipient);
       return {
         destinationDomain: chain.cctpDomain as number,
-        mintRecipient: addrToBytes32(recipient),
+        mintRecipient,
         amount: parsed.raw,
         fee: BigInt(dest.feeQuote!.feeTotalAmount),
         signedQuote: dest.feeQuote!.signedQuote as `0x${string}`,
       };
-    });
+    }));
     const totalUsdc6 = requests.reduce((acc, r) => acc + r.amount, BigInt(0));
     const totalNativeFee = requests.reduce((acc, r) => acc + r.fee, BigInt(0));
 

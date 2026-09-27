@@ -253,9 +253,10 @@ const TESTNET_EXTRA_CHAINS: OnchainChain[] = [
     isTestnet: true,
     isNonEvm: true,
     explorerBase: 'https://solscan.io',
-    rpcUrls: [],
+    rpcUrls: ['https://api.devnet.solana.com'],
     nativeCurrency: { symbol: 'SOL', decimals: 9, isUsdc: false },
     cctpDomain: 5,
+    solanaUsdcMint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
   },
 ];
 
@@ -477,9 +478,10 @@ const MAINNET_DEST_CHAINS: OnchainChain[] = [
     isTestnet: false,
     isNonEvm: true,
     explorerBase: 'https://solscan.io',
-    rpcUrls: [],
+    rpcUrls: ['https://api.mainnet-beta.solana.com'],
     nativeCurrency: { symbol: 'SOL', decimals: 9, isUsdc: false },
     cctpDomain: 5,
+    solanaUsdcMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   },
   {
     // EDGE Chain (edgeX) — Arbitrum Orbit L3

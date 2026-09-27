@@ -44,6 +44,8 @@ export interface OnchainChain {
   scpBlockchain?: string;
   /** True for non-EVM chains (e.g. Solana). Addresses are not 0x-hex. */
   isNonEvm?: boolean;
+  /** Solana USDC mint address (base58). Set for Solana chains. */
+  solanaUsdcMint?: string;
 }
 
 export interface ProtocolContractFact {

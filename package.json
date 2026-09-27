@@ -23,6 +23,8 @@
     "@circle-fin/user-controlled-wallets": "^10.8.0",
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
     "@openzeppelin/contracts": "5.1.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0",
     "@tanstack/react-query": "^5.62.7",
     "@web3icons/react": "^4.0.0",
     "bs58": "^6.0.0",
