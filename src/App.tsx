@@ -6,6 +6,7 @@ import {
   useSwitchChain,
   useReadContract,
   usePublicClient,
+  useSignTypedData,
 } from 'wagmi';
 import { ConnectKitButton } from 'connectkit';
 import { erc20Abi } from 'viem';
@@ -42,6 +43,26 @@ const MULTISEND_ABI = [
     outputs: [],
   },
   {
+    type: 'function', name: 'permitAndMultiSend', stateMutability: 'payable',
+    inputs: [
+      {
+        name: 'requests', type: 'tuple[]',
+        components: [
+          { name: 'destinationDomain', type: 'uint32' },
+          { name: 'mintRecipient', type: 'bytes32' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'fee', type: 'uint256' },
+          { name: 'signedQuote', type: 'bytes' },
+        ],
+      },
+      { name: 'deadline', type: 'uint256' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' },
+    ],
+    outputs: [],
+  },
+  {
     type: 'function', name: 'usdc', stateMutability: 'view',
     inputs: [], outputs: [{ name: '', type: 'address' }],
   },
@@ -63,6 +84,28 @@ const MULTISEND_ABI = [
     ],
   },
 ] as const;
+
+/**
+ * Minimal EIP-2612 surface on the Arc USDC contract.
+ * Domain verified on-chain: name "USDC", version "2".
+ */
+const PERMIT_ABI = [
+  {
+    type: 'function', name: 'nonces', stateMutability: 'view',
+    inputs: [{ name: 'owner', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;
+
+const PERMIT_TYPES = {
+  Permit: [
+    { name: 'owner', type: 'address' },
+    { name: 'spender', type: 'address' },
+    { name: 'value', type: 'uint256' },
+    { name: 'nonce', type: 'uint256' },
+    { name: 'deadline', type: 'uint256' },
+  ],
+} as const;
 
 function addrToBytes32(address: string): `0x${string}` {
   return `0x${address.replace('0x', '').padStart(64, '0')}`;
@@ -125,6 +168,7 @@ export default function App() {
 
   const { writeContractAsync: approveAsync, isPending: isApprovePending } = useWriteContract();
   const { writeContractAsync: sendAsync, isPending: isSendPending } = useWriteContract();
+  const { signTypedDataAsync, isPending: isSignPending } = useSignTypedData();
   const publicClient = usePublicClient({ chainId: SOURCE_CHAIN_ID });
 
   const { isLoading: isApproveConfirming } = useWaitForTransactionReceipt({ hash: approveTxHash });
@@ -244,37 +288,84 @@ export default function App() {
     const totalNativeFee = requests.reduce((acc, r) => acc + r.fee, BigInt(0));
 
     try {
-      setStep('approving');
       setApproveTxHash(undefined);
       setSendTxHash(undefined);
 
-      const approveHash = await approveAsync({
-        address: sourceUsdc.address as `0x${string}`,
-        abi: erc20Abi,
-        functionName: 'approve',
-        args: [MULTISEND_ADDRESS, totalUsdc6],
-        chainId: SOURCE_CHAIN_ID,
-      });
-      setApproveTxHash(approveHash);
-      await publicClient.waitForTransactionReceipt({ hash: approveHash });
+      if (net.supportsPermit) {
+        // Gasless approval: sign an EIP-2612 permit off-chain (free), then the
+        // contract executes permit + multi-send in a single transaction.
+        setStep('approving');
+        const nonce = await publicClient.readContract({
+          address: sourceUsdc.address as `0x${string}`,
+          abi: PERMIT_ABI,
+          functionName: 'nonces',
+          args: [address],
+        });
+        const deadline = BigInt(Math.floor(Date.now() / 1000) + 1800); // 30 min
+        const signature = await signTypedDataAsync({
+          domain: {
+            name: 'USDC',
+            version: '2',
+            chainId: SOURCE_CHAIN_ID,
+            verifyingContract: sourceUsdc.address as `0x${string}`,
+          },
+          types: PERMIT_TYPES,
+          primaryType: 'Permit',
+          message: {
+            owner: address,
+            spender: MULTISEND_ADDRESS,
+            value: totalUsdc6,
+            nonce,
+            deadline,
+          },
+        });
+        const r = `0x${signature.slice(2, 66)}`;
+        const s = `0x${signature.slice(66, 130)}`;
+        const v = parseInt(signature.slice(130, 132), 16);
 
-      setStep('sending');
-      const sendHash = await sendAsync({
-        address: MULTISEND_ADDRESS,
-        abi: MULTISEND_ABI,
-        functionName: 'multiSend',
-        args: [requests],
-        value: totalNativeFee,
-        chainId: SOURCE_CHAIN_ID,
-      });
-      setSendTxHash(sendHash);
-      await publicClient.waitForTransactionReceipt({ hash: sendHash });
-      setStep('done');
+        setStep('sending');
+        const sendHash = await sendAsync({
+          address: MULTISEND_ADDRESS,
+          abi: MULTISEND_ABI,
+          functionName: 'permitAndMultiSend',
+          args: [requests, deadline, v, r, s],
+          value: totalNativeFee,
+          chainId: SOURCE_CHAIN_ID,
+        });
+        setSendTxHash(sendHash);
+        await publicClient.waitForTransactionReceipt({ hash: sendHash });
+        setStep('done');
+      } else {
+        // Legacy flow: separate on-chain approve, then multiSend.
+        setStep('approving');
+        const approveHash = await approveAsync({
+          address: sourceUsdc.address as `0x${string}`,
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [MULTISEND_ADDRESS, totalUsdc6],
+          chainId: SOURCE_CHAIN_ID,
+        });
+        setApproveTxHash(approveHash);
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+
+        setStep('sending');
+        const sendHash = await sendAsync({
+          address: MULTISEND_ADDRESS,
+          abi: MULTISEND_ABI,
+          functionName: 'multiSend',
+          args: [requests],
+          value: totalNativeFee,
+          chainId: SOURCE_CHAIN_ID,
+        });
+        setSendTxHash(sendHash);
+        await publicClient.waitForTransactionReceipt({ hash: sendHash });
+        setStep('done');
+      }
     } catch (e) {
       toast.error(parseOnchainError(e));
       setStep('idle');
     }
-  }, [address, publicClient, isWrongChain, switchChain, networkMode, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync]);
+  }, [address, publicClient, isWrongChain, switchChain, networkMode, net, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync]);
 
   const canSend =
     isConnected && !isWrongChain && destinations.length > 0 &&
@@ -282,14 +373,18 @@ export default function App() {
 
   const isProcessing =
     step === 'approving' || step === 'sending' || isApprovePending || isSendPending ||
-    isApproveConfirming || isSendConfirming;
+    isApproveConfirming || isSendConfirming || isSignPending;
 
   function ctaLabel() {
     if (!isConnected) return 'Connect Wallet';
     if (isWrongChain) return `Switch to ${sourceChain.name}`;
     if (!contractDeployed) return 'Contract not deployed';
-    if (step === 'approving' && (isApprovePending || isApproveConfirming))
-      return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isApprovePending ? 'Approve in wallet...' : 'Approving USDC...'}</span>;
+    if (step === 'approving') {
+      if (net.supportsPermit)
+        return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isSignPending ? 'Sign permit in wallet...' : 'Preparing permit...'}</span>;
+      if (isApprovePending || isApproveConfirming)
+        return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isApprovePending ? 'Approve in wallet...' : 'Approving USDC...'}</span>;
+    }
     if (step === 'sending' && (isSendPending || isSendConfirming))
       return <span className="flex items-center justify-center gap-2"><Loader2 className="size-4 animate-spin" />{isSendPending ? 'Confirm in wallet...' : 'Broadcasting...'}</span>;
     if (step === 'done') return 'Sent!';

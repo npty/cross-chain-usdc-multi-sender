@@ -454,6 +454,11 @@ export interface NetworkConfig {
   quoteApiBase: string;
   /** MultiChainUSDCSend contract on the Arc source chain. Zero address = not deployed → sends disabled. */
   contractAddress: `0x${string}`;
+  /**
+   * Whether the deployed contract supports EIP-2612 permit (permitAndMultiSend).
+   * When false the app falls back to a separate approve transaction.
+   */
+  supportsPermit: boolean;
   /** Forwarding Service destination chains for this network. */
   destinations: OnchainChain[];
 }
@@ -472,6 +477,7 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
     quoteApiBase: 'https://iris-api-sandbox.circle.com',
     contractAddress: envAddress('VITE_MULTISEND_ADDRESS'),
     destinations: TESTNET_DEST_CHAINS,
+    supportsPermit: false,
   },
   mainnet: {
     mode: 'mainnet',
@@ -481,6 +487,7 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
     quoteApiBase: 'https://iris-api.circle.com',
     contractAddress: envAddress('VITE_MULTISEND_ADDRESS_MAINNET'),
     destinations: MAINNET_DEST_CHAINS,
+    supportsPermit: true,
   },
 };
 

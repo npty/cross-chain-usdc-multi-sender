@@ -7,6 +7,7 @@ pragma solidity ^0.8.20;
 // in USDC terms.
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 interface ITokenMessengerWithFees {
@@ -78,6 +79,36 @@ contract MultiChainUSDCSend {
     }
 
     function multiSend(BurnRequest[] calldata requests) external payable {
+        _execute(requests);
+    }
+
+    /// @notice Gasless-approval variant: executes an EIP-2612 permit for the
+    /// total principal, then the multi-send, all in one transaction.
+    /// The user signs the permit off-chain (no gas); only this call costs gas.
+    function permitAndMultiSend(
+        BurnRequest[] calldata requests,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external payable {
+        uint256 totalAmount;
+        for (uint256 i = 0; i < requests.length; ++i) {
+            totalAmount += requests[i].amount;
+        }
+        IERC20Permit(_usdc).permit(
+            msg.sender,
+            address(this),
+            totalAmount,
+            deadline,
+            v,
+            r,
+            s
+        );
+        _execute(requests);
+    }
+
+    function _execute(BurnRequest[] calldata requests) internal {
         uint256 requestCount = requests.length;
         if (requestCount == 0) revert EmptyRequests();
         if (requestCount > MAX_REQUESTS) {
