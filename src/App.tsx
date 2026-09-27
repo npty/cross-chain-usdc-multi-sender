@@ -9,7 +9,7 @@ import {
   useSignTypedData,
 } from 'wagmi';
 import { ConnectKitButton } from 'connectkit';
-import { erc20Abi } from 'viem';
+import { erc20Abi, bytesToHex } from 'viem';
 import bs58 from 'bs58';
 import { Plus, ArrowRight, Loader2, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -113,7 +113,7 @@ function addrToBytes32(address: string): `0x${string}` {
   if (!address.startsWith('0x')) {
     const decoded = bs58.decode(address);
     if (decoded.length !== 32) throw new Error('Invalid Solana address');
-    return `0x${Buffer.from(decoded).toString('hex')}`;
+    return bytesToHex(decoded);
   }
   return `0x${address.replace('0x', '').padStart(64, '0')}`;
 }
