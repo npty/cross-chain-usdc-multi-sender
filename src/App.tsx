@@ -139,7 +139,10 @@ export default function App() {
   const [sendTxHash, setSendTxHash] = useState<`0x${string}` | undefined>();
   const [step, setStep] = useState<'idle' | 'approving' | 'sending' | 'done'>('idle');
 
-  /** Switch testnet ↔ mainnet: clear all network-scoped state. */
+  /**
+   * Switch testnet ↔ mainnet: clear all network-scoped state and move the
+   * wallet to the new source chain automatically.
+   */
   function handleNetworkSwitch(mode: NetworkMode) {
     if (mode === networkMode || step !== 'idle') return;
     setNetworkMode(mode);
@@ -149,6 +152,10 @@ export default function App() {
     setLoadingIndices(new Set());
     setApproveTxHash(undefined);
     setSendTxHash(undefined);
+    const targetChainId = NETWORKS[mode].sourceChainId;
+    if (isConnected && chainId !== targetChainId) {
+      switchChain({ chainId: targetChainId });
+    }
   }
 
   const isWrongChain = isConnected && chainId !== SOURCE_CHAIN_ID;

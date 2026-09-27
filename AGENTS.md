@@ -20,11 +20,12 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 | MultiChainUSDCSend v4 (active) | Arc Testnet | 0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f | https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f |
 | MultiChainUSDCSend v1 (broken — wrong messenger) | Arc Mainnet | 0x0032A5147f96039b62D08f651884aa58CFa30772 | https://explorer.arc.io/address/0x0032A5147f96039b62D08f651884aa58CFa30772 |
 | MultiChainUSDCSend v2 (active) | Arc Mainnet | 0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 | https://explorer.arc.io/address/0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 |
+| MultiChainUSDCSend v3 (active, +EIP-2612 permit) | Arc Mainnet | 0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 | https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 |
 
 ## Environment Variables
 
 - `VITE_MULTISEND_ADDRESS` — MultiChainUSDCSend contract address on Arc Testnet (set in .env)
-- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend on Arc mainnet: `0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839` (redeployed 2026-09-27, deploy tx `0x104155f354e47fe3a0f2754b48901b9861b490f4aeeef636d05ece6e3f08cb22`; the first mainnet deploy `0x0032A5147f96039b62D08f651884aa58CFa30772` was broken — it stored TokenMessengerV2 instead of TokenMessengerWithFees, so all sends reverted). Set in Vercel for production+preview; Mainnet mode is live and a 1 USDC test to Arbitrum succeeded 2026-09-27.
+- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend on Arc mainnet: `0xB00cDe5662F5190d9F76B3629C16145Be7B28c57` (v3 with EIP-2612 permit, deployed 2026-09-27, deploy tx `0xb6cf6ebc63b53d2cfa9e01dd28b905286beb5203bb118206fc14f8418f26016e`; the first mainnet deploy `0x0032A5147f96039b62D08f651884aa58CFa30772` was broken — it stored TokenMessengerV2 instead of TokenMessengerWithFees, so all sends reverted; v2 `0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839` worked but needed a separate approve tx). Set in Vercel for production+preview; Mainnet mode is live and a 1 USDC test to Arbitrum succeeded 2026-09-27.
 
 ## Networks
 
