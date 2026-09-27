@@ -173,11 +173,48 @@ const edgeTestnet = defineChain({
   testnet: true,
 })
 
+const codexTestnet = defineChain({
+  id: 812242,
+  name: 'Codex Testnet',
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  rpcUrls: { default: { http: ['https://rpc.codex-stg.xyz'] } },
+  blockExplorers: { default: { name: 'Codex Explorer', url: 'https://explorer.codex-stg.xyz' } },
+  testnet: true,
+})
+
+const monadTestnet = defineChain({
+  id: 10143,
+  name: 'Monad Testnet',
+  nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+  rpcUrls: { default: { http: ['https://testnet-rpc.monad.xyz'] } },
+  blockExplorers: { default: { name: 'Monad Explorer', url: 'https://testnet.monadexplorer.com' } },
+  testnet: true,
+})
+
+const hyperEvmTestnet = defineChain({
+  id: 998,
+  name: 'HyperEVM Testnet',
+  nativeCurrency: { name: 'HYPE', symbol: 'HYPE', decimals: 18 },
+  rpcUrls: { default: { http: ['https://rpc.hyperliquid-testnet.xyz/evm', 'https://rpcs.chain.link/hyperevm/testnet'] } },
+  blockExplorers: { default: { name: 'Purrsec', url: 'https://testnet.purrsec.com' } },
+  testnet: true,
+})
+
+const xdcApothem = defineChain({
+  id: 51,
+  name: 'XDC Apothem',
+  nativeCurrency: { name: 'XDC', symbol: 'XDC', decimals: 18 },
+  rpcUrls: { default: { http: ['https://erpc.apothem.network'] } },
+  blockExplorers: { default: { name: 'XDCScan', url: 'https://testnet.xdcscan.com' } },
+  testnet: true,
+})
+
 export const DEST_CHAINS = [
   ethereumSepolia, avalancheFuji, opSepolia, arbitrumSepolia,
   baseSepolia, polygonAmoy, unichainSepolia, lineaSepolia,
   sonicBlazeTestnet, worldChainSepolia, seiTestnet,
   inkSepolia, plumeTestnet, edgeTestnet,
+  codexTestnet, monadTestnet, hyperEvmTestnet, xdcApothem,
 ] as const
 
 // ── Mainnet destination chains (CCTP v2 Forwarding Service) ─────────────────
@@ -218,6 +255,10 @@ export const config = createConfig({
     [inkSepolia.id]: http(),
     [plumeTestnet.id]: http(),
     [edgeTestnet.id]: http(),
+    [codexTestnet.id]: http(),
+    [monadTestnet.id]: http(),
+    [hyperEvmTestnet.id]: http(),
+    [xdcApothem.id]: http(),
     [mainnet.id]: http(),
     [avalanche.id]: http(),
     [optimism.id]: http(),

@@ -12,9 +12,12 @@
  *   (EDGE Testnet remains available in testnet mode).
  * - The remaining 17 EVM chains are all included as mainnet destinations.
  *
- * Testnet destinations (14) are unchanged from before; a few chains (Linea,
- * Sonic, World Chain, Ink, Plume, EDGE) aren't in onchain-facts at all and are
- * defined inline using public testnet RPC/explorer info.
+ * Testnet destinations (18): every EVM testnet Circle lists with CCTP V2
+ * contracts deployed — the 13 from before plus Unichain Sepolia, Codex
+ * Testnet, Monad Testnet, XDC Apothem, and HyperEVM Testnet (added 2026-09-27
+ * after verifying sandbox Forwarding quotes for domains 10/12/15/18/19).
+ * Chains missing from onchain-facts are defined inline using public
+ * testnet RPC/explorer info.
  */
 
 import { TESTNET_ONCHAIN_CHAINS } from '@/onchain-facts';
@@ -144,6 +147,97 @@ const TESTNET_EXTRA_CHAINS: OnchainChain[] = [
       decimals: 6,
     },
     cctpDomain: 28,
+  },
+  {
+    // CCTP domain 10 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // USDC: https://developers.circle.com/stablecoins/usdc-contract-addresses (Unichain Sepolia)
+    chainId: 1301,
+    name: 'Unichain Sepolia',
+    isTestnet: true,
+    explorerBase: 'https://unichain-sepolia.blockscout.com',
+    rpcUrls: [
+      'https://sepolia.unichain.org',
+    ],
+    nativeCurrency: { symbol: 'ETH', decimals: 18, isUsdc: false },
+    usdc: {
+      symbol: 'USDC',
+      address: '0x31d0220469e10c4E71834a79b1f276d740d3768F',
+      decimals: 6,
+    },
+    cctpDomain: 10,
+  },
+  {
+    // CCTP domain 12 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // USDC: https://developers.circle.com/stablecoins/usdc-contract-addresses (Codex Testnet)
+    chainId: 812242,
+    name: 'Codex Testnet',
+    isTestnet: true,
+    explorerBase: 'https://explorer.codex-stg.xyz',
+    rpcUrls: [
+      'https://rpc.codex-stg.xyz',
+    ],
+    nativeCurrency: { symbol: 'ETH', decimals: 18, isUsdc: false },
+    usdc: {
+      symbol: 'USDC',
+      address: '0x6d7f141b6819C2c9CC2f818e6ad549E7Ca090F8f',
+      decimals: 6,
+    },
+    cctpDomain: 12,
+  },
+  {
+    // CCTP domain 15 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // USDC: https://developers.circle.com/stablecoins/usdc-contract-addresses (Monad Testnet)
+    chainId: 10143,
+    name: 'Monad Testnet',
+    isTestnet: true,
+    explorerBase: 'https://testnet.monadexplorer.com',
+    rpcUrls: [
+      'https://testnet-rpc.monad.xyz',
+    ],
+    nativeCurrency: { symbol: 'MON', decimals: 18, isUsdc: false },
+    usdc: {
+      symbol: 'USDC',
+      address: '0x534b2f3A21130d7a60830c2Df862319e593943A3',
+      decimals: 6,
+    },
+    cctpDomain: 15,
+  },
+  {
+    // CCTP domain 18 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // USDC: https://developers.circle.com/stablecoins/usdc-contract-addresses (XDC Apothem)
+    chainId: 51,
+    name: 'XDC Apothem',
+    isTestnet: true,
+    explorerBase: 'https://testnet.xdcscan.com',
+    rpcUrls: [
+      'https://erpc.apothem.network',
+    ],
+    nativeCurrency: { symbol: 'XDC', decimals: 18, isUsdc: false },
+    usdc: {
+      symbol: 'USDC',
+      address: '0xb5AB69F7bBada22B28e79C8FFAECe55eF1c771D4',
+      decimals: 6,
+    },
+    cctpDomain: 18,
+  },
+  {
+    // CCTP domain 19 — Forwarding Service ✅ (sandbox quote verified 2026-09-27)
+    // USDC: https://developers.circle.com/stablecoins/usdc-contract-addresses (HyperEVM Testnet)
+    chainId: 998,
+    name: 'HyperEVM Testnet',
+    isTestnet: true,
+    explorerBase: 'https://testnet.purrsec.com',
+    rpcUrls: [
+      'https://rpc.hyperliquid-testnet.xyz/evm',
+      'https://rpcs.chain.link/hyperevm/testnet',
+    ],
+    nativeCurrency: { symbol: 'HYPE', decimals: 18, isUsdc: false },
+    usdc: {
+      symbol: 'USDC',
+      address: '0x2B3370eE501B4a559b57D449569354196457D8Ab',
+      decimals: 6,
+    },
+    cctpDomain: 19,
   },
 ];
 
