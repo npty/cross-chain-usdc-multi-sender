@@ -22,7 +22,7 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 ## Environment Variables
 
 - `VITE_MULTISEND_ADDRESS` — MultiChainUSDCSend contract address on Arc Testnet (set in .env)
-- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend contract address on Arc mainnet. Leave as zero address until the contract is reviewed and deployed to mainnet; Mainnet mode shows as preview-only while unset.
+- `VITE_MULTISEND_ADDRESS_MAINNET` — MultiChainUSDCSend on Arc mainnet: `0x0032A5147f96039b62D08f651884aa58CFa30772` (deployed 2026-09-27, deploy tx `0x49188e3c7116d9cb8f2f0f3520266e597a52cd948129f50a6bca95ece2981ee2`). Set in Vercel for production+preview; Mainnet mode is live.
 
 ## Networks
 
