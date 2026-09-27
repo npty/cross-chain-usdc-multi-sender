@@ -310,8 +310,10 @@ export default function App() {
   }
 
   function handleRecipientChange(index: number, recipient: string) {
+    // Note: the fee quote is intentionally NOT cleared here — it depends only on
+    // (source, destination, amount), not on the recipient address.
     setDestinations((prev) =>
-      prev.map((d, i) => (i === index ? { ...d, recipient, feeQuote: null, feeError: null } : d)),
+      prev.map((d, i) => (i === index ? { ...d, recipient } : d)),
     );
   }
 
