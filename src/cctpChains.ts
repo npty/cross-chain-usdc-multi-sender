@@ -468,6 +468,18 @@ const MAINNET_DEST_CHAINS: OnchainChain[] = [
     nativeCurrency: { symbol: 'SOL', decimals: 9, isUsdc: false },
     cctpDomain: 5,
   },
+  {
+    // EDGE Chain (edgeX) — Arbitrum Orbit L3
+    chainId: 3343,
+    name: 'EDGE',
+    isTestnet: false,
+    family: 'arbitrum',
+    explorerBase: 'https://pro.edgex.exchange/en-US/explorer',
+    rpcUrls: ['https://edge-mainnet.g.alchemy.com/public'],
+    nativeCurrency: { symbol: 'ETH', decimals: 18, isUsdc: false },
+    usdc: { symbol: 'USDC', address: '0x98d2919b9A214E6Fa5384AC81E6864bA686Ad74c', decimals: 6 },
+    cctpDomain: 28,
+  },
 ];
 
 // ── Network configs ──────────────────────────────────────────────────────────
