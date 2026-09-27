@@ -241,9 +241,9 @@ export const config = createConfig({
   transports: {
     [arcTestnet.id]: http(),
     [arc.id]: fallback([
+      http('https://arc-rpc.publicnode.com'),
       http('https://rpc.mainnet.arc.io'),
       http('https://rpc.blockdaemon.mainnet.arc.io'),
-      http('https://rpc.drpc.mainnet.arc.io'),
     ]),
     [ethereumSepolia.id]: http(),
     [avalancheFuji.id]: http(),
