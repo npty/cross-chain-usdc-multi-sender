@@ -326,8 +326,8 @@ export default function App() {
             deadline,
           },
         });
-        const r = `0x${signature.slice(2, 66)}`;
-        const s = `0x${signature.slice(66, 130)}`;
+        const r = `0x${signature.slice(2, 66)}` as `0x${string}`;
+        const s = `0x${signature.slice(66, 130)}` as `0x${string}`;
         const v = parseInt(signature.slice(130, 132), 16);
 
         setStep('sending');
