@@ -218,7 +218,7 @@ export default function App() {
         return next;
       });
     },
-    [],
+    [setDestinations, setLoadingIndices],
   );
 
   useFeeEstimates({
@@ -348,8 +348,8 @@ export default function App() {
             deadline,
           },
         });
-        const r = `0x${signature.slice(2, 66)}`;
-        const s = `0x${signature.slice(66, 130)}`;
+        const r: `0x${string}` = `0x${signature.slice(2, 66)}`;
+        const s: `0x${string}` = `0x${signature.slice(66, 130)}`;
         const v = parseInt(signature.slice(130, 132), 16);
 
         setStep('sending');
@@ -394,7 +394,7 @@ export default function App() {
       toast.error(parseOnchainError(e));
       setStep('idle');
     }
-  }, [address, publicClient, isWrongChain, switchChain, networkMode, net, source, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync]);
+  }, [address, publicClient, isWrongChain, switchChain, networkMode, source, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync, setApproveTxHash, setSendTxHash, setStep]);
 
   const canSend =
     isConnected && !isWrongChain && destinations.length > 0 &&
