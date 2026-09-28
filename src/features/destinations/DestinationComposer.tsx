@@ -25,10 +25,10 @@ export function DestinationComposer(props: DestinationComposerProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2 items-stretch">
+      <div className="flex gap-2 items-stretch w-full min-w-0">
         {/* Amount input */}
         <div
-          className="flex-1 rounded-2xl px-4 py-3 flex items-center gap-2"
+          className="flex-1 min-w-0 rounded-2xl px-4 py-3 flex items-center gap-2"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
           <input
@@ -45,7 +45,7 @@ export function DestinationComposer(props: DestinationComposerProps) {
         {/* Picker toggle — opens the chain picker modal */}
         <button
           onClick={onTogglePicker}
-          className="flex items-center justify-center gap-1.5 rounded-2xl px-4 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+          className="flex items-center justify-center gap-1.5 rounded-2xl px-4 transition-colors hover:brightness-95 active:brightness-90 shrink-0"
           style={{
             background: pickerOpen ? 'var(--accent)' : 'var(--surface)',
             border: `1.5px solid ${pickerOpen ? 'var(--accent)' : 'var(--border)'}`,
