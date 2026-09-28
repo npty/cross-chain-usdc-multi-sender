@@ -606,25 +606,6 @@ export function getNetworkChain(mode: NetworkMode, chainId: number): OnchainChai
 }
 
 /**
- * Block explorer URL for a wallet address on a destination chain.
- * Uses the chain's configured explorerBase (Etherscan/Blockscout family all
- * serve address pages at `/address/{address}`).
- * Returns undefined when the chain has no explorer configured.
- */
-export function buildDestinationAddressUrl(
-  mode: NetworkMode,
-  chainId: number,
-  address: string,
-): string | undefined {
-  const chain = getNetworkChain(mode, chainId);
-  if (!chain?.explorerBase) return undefined;
-  const base = chain.explorerBase.replace(/\/+$/, '');
-  // Solscan uses /account/ instead of /address/
-  const path = chain.isNonEvm ? 'account' : 'address';
-  return `${base}/${path}/${address}`;
-}
-
-/**
  * Delivery transaction URL for a destination chain, e.g. the forwarder's
  * mint transaction. Uses the destination registry (not the onchain facts
  * registry, which only covers a subset of chains) so it never throws.
@@ -639,5 +620,7 @@ export function buildDestinationTxUrl(
   const chain = getNetworkChain(mode, chainId);
   if (!chain?.explorerBase) return undefined;
   const base = chain.explorerBase.replace(/\/+$/, '');
-  return `${base}/tx/${txHash}`;
+  // Solscan defaults to mainnet; devnet transactions need the cluster param.
+  const suffix = chain.isNonEvm && chain.isTestnet ? '?cluster=devnet' : '';
+  return `${base}/tx/${txHash}${suffix}`;
 }
