@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   useAccount,
   useWriteContract,
@@ -11,8 +11,8 @@ import {
 import { ConnectKitButton } from 'connectkit';
 import { erc20Abi } from 'viem';
 import { toast } from 'sonner';
-import { Github } from 'lucide-react';
-import { ContractsPanel } from './features/contracts/ContractsPanel';
+import { ContractsPage } from './features/contracts/ContractsPage';
+import { PageFooter } from '@/shared/PageFooter';
 
 import { getUsdc, requireChain } from '@/onchain/facts';
 import { NETWORKS, type NetworkMode } from '@/cctp-chains';
@@ -38,14 +38,26 @@ import { SendButton } from './features/send/SendButton';
 import { SendFlow, type SendStepState } from './features/send/multisend';
 import { TrackingPanel } from './features/tracking/TrackingPanel';
 
+// Hash-based route: '#/contracts' shows the info-only contracts page,
+// anything else shows the send flow.
+function useHashRoute(): 'send' | 'contracts' {
+  const [hash, setHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
+  }, []);
+  return hash === '#/contracts' ? 'contracts' : 'send';
+}
+
 export default function App() {
+  const route = useHashRoute();
   const { address, chainId, isConnected } = useAccount();
   const { switchChain } = useSwitchChain();
 
   // ── Network + source chain ──────────────────────────────────────────────
 
   const [networkMode, setNetworkMode] = useState<NetworkMode>('testnet');
-  const [activeTab, setActiveTab] = useState<'send' | 'contracts'>('send');
   const net = NETWORKS[networkMode];
   const [sourceChainId, setSourceChainId] = useState<number>(NETWORKS.testnet.sources[0].chainId);
   const source = net.sources.find((s) => s.chainId === sourceChainId) ?? net.sources[0];
@@ -209,6 +221,11 @@ export default function App() {
   // Top (sticky config) + bottom (scrollable details). Each zone composes
   // feature components; all business logic lives in the feature modules.
 
+  // Info-only route: '#/contracts' renders the verified-contracts page.
+  if (route === 'contracts') {
+    return <ContractsPage />;
+  }
+
   return (
     <div className="flex flex-col min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
 
@@ -232,34 +249,6 @@ export default function App() {
             <ConnectKitButton />
           </div>
 
-          {/* Tabs — Send / Contracts */}
-          <div
-            className="flex rounded-2xl p-1"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            role="tablist"
-            aria-label="Sections"
-          >
-            {(['send', 'contracts'] as const).map((tab) => {
-              const active = tab === activeTab;
-              return (
-                <button
-                  key={tab}
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setActiveTab(tab)}
-                  className="flex-1 rounded-xl py-2 text-sm font-semibold transition-all"
-                  style={active
-                    ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 2px 8px rgba(0,115,250,0.3)' }
-                    : { color: 'var(--muted)' }}
-                >
-                  {tab === 'send' ? 'Send' : 'Contracts'}
-                </button>
-              );
-            })}
-          </div>
-
-          {activeTab === 'send' && (
-          <>
           <NetworkPanel
             networkMode={networkMode}
             step={step}
@@ -289,19 +278,12 @@ export default function App() {
             selectedIds={selectedIds}
             onToggleChain={handleToggleChain}
           />
-          </>
-          )}
         </div>
       </div>
 
       {/* ── BOTTOM ZONE — scrollable chain list + summary + CTA ──────────── */}
       <div className="flex-1 px-4 py-4">
         <div className="mx-auto max-w-lg space-y-4">
-
-          {activeTab === 'contracts' ? (
-            <ContractsPanel />
-          ) : (
-          <>
 
           <DestinationList
             destinations={destinations}
@@ -362,26 +344,8 @@ export default function App() {
           ) : (
             <p className="text-center text-xs pb-4" style={{ color: 'var(--subtle)' }}>Deploy the contract to enable sending</p>
           )}
-          </>
-          )}
 
-          {/* Independence disclaimer */}
-          <p className="text-center text-xs leading-relaxed px-2" style={{ color: 'var(--subtle)' }}>
-            MultiSend is an independent open-source tool. It is <strong>NOT</strong> affiliated with,
-            endorsed by, or sponsored by Circle Internet Financial, Inc. It simply interacts with Circle's
-            public, permissionless CCTP smart contracts, which any developer can build on.
-          </p>
-          <p className="text-center pb-6">
-            <a
-              href="https://github.com/npty/cross-chain-usdc-multi-sender"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs underline"
-              style={{ color: 'var(--muted)' }}
-            >
-              <Github className="size-3.5" /> View source on GitHub
-            </a>
-          </p>
+          <PageFooter />
         </div>
       </div>
     </div>
