@@ -141,10 +141,15 @@ interface UseFeeEstimatesOptions {
   networkMode: NetworkMode;
   quoteApiBase: string;
   sourceDomain: number;
+  /** When false (e.g. after the send), quotes are not refreshed. */
+  enabled: boolean;
   onUpdate: (index: number, quote: FeeQuote | null, error: string | null, loading: boolean) => void;
 }
 
-export function useFeeEstimates({ destinations, sourceChainId, networkMode, quoteApiBase, sourceDomain, onUpdate }: UseFeeEstimatesOptions) {
+// Refresh this far before a quote expires so the replacement lands in time.
+const REFRESH_BEFORE_EXPIRY_MS = 15_000;
+
+export function useFeeEstimates({ destinations, sourceChainId, networkMode, quoteApiBase, sourceDomain, enabled, onUpdate }: UseFeeEstimatesOptions) {
   const timerRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const abortRefs = useRef<Map<number, AbortController>>(new Map());
 
@@ -199,6 +204,27 @@ export function useFeeEstimates({ destinations, sourceChainId, networkMode, quot
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destKey, estimate]);
+
+  // Auto-refresh each quote shortly before it expires, so the send always
+  // has a live quote without the user doing anything. Only while composing.
+  useEffect(() => {
+    if (!enabled) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    destinations.forEach((dest, index) => {
+      const expiresAt = dest.feeQuote?.expiresAt;
+      if (!expiresAt) return;
+      const delay = expiresAt - Date.now() - REFRESH_BEFORE_EXPIRY_MS;
+      if (delay <= 0) {
+        // Already expired (e.g. tab was in the background): refresh now.
+        estimate(index, dest);
+        return;
+      }
+      timers.push(setTimeout(() => estimate(index, dest), delay));
+    });
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [enabled, destinations, estimate]);
 
   // Cleanup on unmount
   useEffect(() => {

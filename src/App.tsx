@@ -159,6 +159,7 @@ export default function App() {
     networkMode,
     quoteApiBase: net.quoteApiBase,
     sourceDomain: source.cctpDomain,
+    enabled: step === 'idle',
     onUpdate: handleFeeUpdate,
   });
 
