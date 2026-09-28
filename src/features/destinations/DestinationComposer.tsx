@@ -16,7 +16,7 @@ interface DestinationComposerProps {
 
 /**
  * The "compose" row: global USDC amount input plus the chain-picker toggle.
- * The picker opens below the row, above the destination list.
+ * The picker opens as a modal dialog above the page content.
  */
 export function DestinationComposer(props: DestinationComposerProps) {
   const {
@@ -69,6 +69,7 @@ export function DestinationComposer(props: DestinationComposerProps) {
 
       <ChainPicker
         open={pickerOpen}
+        onClose={onTogglePicker}
         chains={chains}
         selectedIds={selectedIds}
         onToggle={onToggleChain}

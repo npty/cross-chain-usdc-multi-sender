@@ -23,7 +23,6 @@ import { switchNetwork, switchSourceChain } from './features/network/network';
 import { DestinationComposer } from './features/destinations/DestinationComposer';
 import { DestinationList } from './features/destinations/DestinationList';
 import {
-  MAX_DESTINATIONS,
   applyGlobalAmount,
   removeDestination,
   sanitizeAmountInput,
@@ -151,13 +150,8 @@ export default function App() {
 
   function handleToggleChain(cId: number) {
     const already = destinations.some((d) => d.chainId === cId);
-    if (already) {
-      // Remove — but only if not mid-send
-      if (step !== 'idle') return;
-    } else if (destinations.length >= MAX_DESTINATIONS) {
-      toast.error(`Maximum ${MAX_DESTINATIONS} destination chains.`);
-      return;
-    }
+    // Can't remove a chain mid-send
+    if (already && step !== 'idle') return;
     setDestinations((prev) =>
       toggleDestination(prev, cId, { networkMode, amount: globalAmount, walletAddress: address }),
     );

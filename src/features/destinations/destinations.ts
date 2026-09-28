@@ -1,8 +1,6 @@
 import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import type { ChainDestination } from './types';
 
-export const MAX_DESTINATIONS = 10;
-
 export interface NewDestinationOpts {
   networkMode: NetworkMode;
   /** Pre-fill amount, e.g. the global amount input. */
