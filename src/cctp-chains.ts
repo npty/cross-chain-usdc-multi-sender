@@ -25,8 +25,8 @@
  * testnet RPC/explorer info.
  */
 
-import { TESTNET_ONCHAIN_CHAINS } from '@/onchain-facts';
-import type { OnchainChain } from '@/onchain-facts';
+import { TESTNET_ONCHAIN_CHAINS } from '@/onchain/facts';
+import type { OnchainChain } from '@/onchain/facts';
 
 export type NetworkMode = 'testnet' | 'mainnet';
 

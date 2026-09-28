@@ -26,7 +26,7 @@ const CONTRACT_SOURCES_DIR = CONTRACTS_ROOT_DIR;
 const FOUNDRY_OUT_DIR = `${CONTRACTS_ROOT_DIR}/out`;
 const CONTRACT_METADATA_DIR = `${CONTRACTS_ROOT_DIR}/contract-metadata`;
 
-const ONCHAIN_FACTS_PATH = `${WORK_DIR}/src/onchain-facts.ts`;
+const ONCHAIN_FACTS_PATH = `${WORK_DIR}/src/onchain/facts.ts`;
 
 /*
  * The facts module is injected into the sandbox per session, so it is absent from
@@ -34,7 +34,7 @@ const ONCHAIN_FACTS_PATH = `${WORK_DIR}/src/onchain-facts.ts`;
  * would make the image's build-time typecheck resolve a file that does not exist
  * at build time.
  */
-const ONCHAIN_FACTS_IMPORT: string = '@/onchain-facts';
+const ONCHAIN_FACTS_IMPORT: string = '@/onchain/facts';
 
 interface ChainFact {
   chainId: number;

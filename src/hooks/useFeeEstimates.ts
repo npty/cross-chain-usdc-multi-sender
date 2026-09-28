@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { parseAmount } from '@/onchain-money';
-import { getNetworkChain, type NetworkMode } from '@/cctpChains';
+import { parseUsdcAmount } from '@/onchain/money';
+import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import type { ChainDestination, FeeQuote, FeeQuoteItem } from '../components/types';
 
 // CCTP v2 Quote API — base URL is network-scoped (sandbox for testnet,
-// production for mainnet). See NETWORKS in '@/cctpChains'.
+// production for mainnet). See NETWORKS in '@/cctp-chains'.
 // POST /v2/quote/burn/usdc/{sourceDomainId}/{destDomainId}
 
 // ── API types (from OpenAPI spec) ────────────────────────────────────────────
@@ -77,8 +77,7 @@ async function fetchQuote(
   // Parse to 6-decimal integer string (USDC minor units)
   let amountRaw: string;
   try {
-    const parsed = parseAmount(sourceChainId, amountHuman);
-    amountRaw = parsed.raw.toString();
+    amountRaw = parseUsdcAmount(sourceChainId, amountHuman).toString();
   } catch {
     return { quote: null, error: 'Invalid amount' };
   }

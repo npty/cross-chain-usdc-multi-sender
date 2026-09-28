@@ -6,7 +6,7 @@
  * switch networks and so wallet_watchAsset and wallet_addEthereumChain work
  * correctly.
  *
- * Testnet chains are custom-defined (matching src/cctpChains.ts).
+ * Testnet chains are custom-defined (matching src/cctp-chains.ts).
  * Mainnet chains reuse wagmi/viem exports, except Plume: wagmi's built-in
  * `plume` chain is the legacy chain ID 98865 — the current Plume mainnet is
  * 98866, so it's defined explicitly below.

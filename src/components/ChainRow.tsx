@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import bs58 from 'bs58';
 import type { ChainDestination } from './types';
-import type { OnchainChain } from '@/onchain-facts';
+import type { OnchainChain } from '@/onchain/facts';
 
 interface ChainRowProps {
   dest: ChainDestination;

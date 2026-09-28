@@ -3,7 +3,7 @@
  * Replaces the modal bottom-sheet for a faster, less intrusive UX.
  */
 import { motion, AnimatePresence } from 'framer-motion';
-import type { OnchainChain } from '@/onchain-facts';
+import type { OnchainChain } from '@/onchain/facts';
 
 interface ChainPickerProps {
   open: boolean;

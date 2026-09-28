@@ -16,15 +16,15 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { Plus, ArrowRight, Loader2, ExternalLink, Info, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getUsdc, requireChain, buildTxExplorerUrl } from '@/onchain-facts';
+import { getUsdc, requireChain, buildTxExplorerUrl } from '@/onchain/facts';
 import {
   NETWORKS,
   NETWORK_MODES,
   getNetworkChain,
   buildDestinationAddressUrl,
   type NetworkMode,
-} from '@/cctpChains';
-import { parseAmount } from '@/onchain-money';
+} from '@/cctp-chains';
+import { parseUsdcAmount } from '@/onchain/money';
 import { ChainRow } from './components/ChainRow';
 import { ChainPicker } from './components/ChainPicker';
 import { useFeeEstimates } from './hooks/useFeeEstimates';
@@ -375,7 +375,7 @@ export default function App() {
 
     const requests = await Promise.all(destinations.map(async (dest) => {
       const chain = getNetworkChain(networkMode, dest.chainId)!;
-      const parsed = parseAmount(SOURCE_CHAIN_ID, dest.amount);
+      const amountRaw = parseUsdcAmount(SOURCE_CHAIN_ID, dest.amount);
       const recipient = dest.recipient || address;
       // Solana destinations: mintRecipient must be the USDC token account (ATA),
       // not the wallet address. The Forwarding Service creates the ATA if needed.
@@ -385,7 +385,7 @@ export default function App() {
       return {
         destinationDomain: chain.cctpDomain as number,
         mintRecipient,
-        amount: parsed.raw,
+        amount: amountRaw,
         fee: BigInt(dest.feeQuote!.feeTotalAmount),
         signedQuote: dest.feeQuote!.signedQuote as `0x${string}`,
       };
