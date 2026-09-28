@@ -80,24 +80,3 @@ forge verify-contract <address> contracts/MultiChainUSDCSend.sol:MultiChainUSDCS
   --constructor-args 0x<abi-encoded-args>
 ```
 
-## Project structure
-
-```
-src/
-  App.tsx                    # thin composition layer: wires features together
-  config.ts                  # wagmi config (chains, connectors, transports)
-  features/
-    destinations/            # destination picker, list, composer (UI + pure helpers)
-    fees/                    # fee quotes, totals, fee summary UI
-    network/                 # network panel, chain switching
-    send/                    # SendFlow orchestration, permit signing, send button
-    tracking/                # post-send transfer tracking panel
-  shared/                    # reusable helpers: addresses, errors
-  onchain/                   # chain facts, money formatting
-contracts/
-  MultiChainUSDCSend.sol     # batching contract
-  test/                      # forge unit tests
-```
-
-Business logic lives in the feature folders (`*.ts`); components (`*.tsx`) handle
-only UI. `App.tsx` composes them.
