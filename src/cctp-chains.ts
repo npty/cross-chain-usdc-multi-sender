@@ -623,3 +623,21 @@ export function buildDestinationAddressUrl(
   const path = chain.isNonEvm ? 'account' : 'address';
   return `${base}/${path}/${address}`;
 }
+
+/**
+ * Delivery transaction URL for a destination chain, e.g. the forwarder's
+ * mint transaction. Uses the destination registry (not the onchain facts
+ * registry, which only covers a subset of chains) so it never throws.
+ * Solscan serves transaction pages at `/tx/{signature}`, same as EVM explorers.
+ * Returns undefined when the chain has no explorer configured.
+ */
+export function buildDestinationTxUrl(
+  mode: NetworkMode,
+  chainId: number,
+  txHash: string,
+): string | undefined {
+  const chain = getNetworkChain(mode, chainId);
+  if (!chain?.explorerBase) return undefined;
+  const base = chain.explorerBase.replace(/\/+$/, '');
+  return `${base}/tx/${txHash}`;
+}

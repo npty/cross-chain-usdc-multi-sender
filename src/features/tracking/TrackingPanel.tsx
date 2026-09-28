@@ -2,6 +2,7 @@ import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 
 import { buildTxExplorerUrl } from '@/onchain/facts';
 import {
+  buildDestinationTxUrl,
   getNetworkChain,
   NETWORKS,
   type NetworkMode,
@@ -95,6 +96,9 @@ export function TrackingPanel(props: TrackingPanelProps) {
             const recipient = dest.recipient || walletAddress || '';
             const domain = destinationDomains[i];
             const deliveryTxHash = domain >= 0 ? arrivals[domain]?.forwardTxHash : undefined;
+            const deliveryUrl = deliveryTxHash
+              ? buildDestinationTxUrl(networkMode, dest.chainId, deliveryTxHash)
+              : undefined;
             return (
               <div
                 key={dest.chainId}
@@ -111,9 +115,9 @@ export function TrackingPanel(props: TrackingPanelProps) {
                 </div>
                 <div className="flex shrink-0 items-center gap-2.5">
                   <ArrivalBadge info={domain >= 0 ? arrivals[domain] : undefined} live={live} />
-                  {deliveryTxHash && (
+                  {deliveryUrl && (
                     <a
-                      href={buildTxExplorerUrl(dest.chainId, deliveryTxHash)}
+                      href={deliveryUrl}
                       target="_blank"
                       rel="noreferrer"
                       title="View delivery transaction"
