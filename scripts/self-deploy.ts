@@ -29,7 +29,7 @@ const CONTRACT_METADATA_DIR = `${CONTRACTS_ROOT_DIR}/contract-metadata`;
 const ONCHAIN_FACTS_PATH = `${WORK_DIR}/src/onchain-facts.ts`;
 
 /*
- * Arc Studio writes the facts module into the sandbox per chat, so it is absent from
+ * The facts module is injected into the sandbox per session, so it is absent from
  * the template image. The specifier is typed as `string` on purpose: a literal
  * would make the image's build-time typecheck resolve a file that does not exist
  * at build time.
@@ -54,10 +54,10 @@ interface OnchainFactsModule {
 async function loadOnchainFacts(): Promise<OnchainFactsModule> {
   if (!fs.existsSync(ONCHAIN_FACTS_PATH)) {
     throw new Error(
-      `Onchain facts module not found at ${ONCHAIN_FACTS_PATH}. Arc Studio injects that file into the sandbox, ` +
+      `Onchain facts module not found at ${ONCHAIN_FACTS_PATH}. The sandbox injects that file, ` +
         'and this script reads every chain fact from it, so the deploy cannot pick a chain without it. ' +
         'The facts module was not injected into this sandbox. Send one more chat message to trigger the ' +
-        'injection, then run this script again. Do not write the file by hand: Arc Studio generates it.',
+        'injection, then run this script again. Do not write the file by hand: it is generated.',
     );
   }
 

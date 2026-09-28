@@ -1,6 +1,5 @@
 /**
  * wagmi configuration
- * Built with Arc Studio — https://studio.arc.io
  *
  * Arc (testnet + mainnet) source chains plus all CCTP v2 Forwarding Service
  * destination chains are registered here so the wallet can prompt users to
