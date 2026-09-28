@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   useAccount,
   useWriteContract,
@@ -91,6 +91,23 @@ export default function App() {
     resetSendState,
     switchChain,
   };
+
+  // Keyboard shortcuts: 1 → Testnet, 2 → Mainnet. Ignored while typing in
+  // inputs or mid-send (switchNetwork also no-ops then).
+  const switchNetworkRef = useRef((mode: NetworkMode) => switchNetwork(networkDeps, mode));
+  switchNetworkRef.current = (mode) => switchNetwork(networkDeps, mode);
+  useEffect(() => {
+    if (step !== 'idle') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key === '1') switchNetworkRef.current('testnet');
+      else if (e.key === '2') switchNetworkRef.current('mainnet');
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [step]);
 
   // ── Wallet data ─────────────────────────────────────────────────────────
 

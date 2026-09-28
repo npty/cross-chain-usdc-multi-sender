@@ -44,7 +44,7 @@ export function NetworkPanel(props: NetworkPanelProps) {
           role="tablist"
           aria-label="Network"
         >
-          {NETWORK_MODES.map((mode) => {
+          {NETWORK_MODES.map((mode, i) => {
             const active = mode === networkMode;
             return (
               <button
@@ -58,6 +58,14 @@ export function NetworkPanel(props: NetworkPanelProps) {
                   ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 2px 8px rgba(0,115,250,0.3)' }
                   : { color: 'var(--muted)' }}
               >
+                <span
+                  className="mr-1.5 rounded px-1 py-0.5 text-[10px] font-bold tabular-nums"
+                  style={active
+                    ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
+                    : { background: 'var(--surface-muted)', color: 'var(--subtle)' }}
+                >
+                  {i + 1}
+                </span>
                 {NETWORKS[mode].label}
               </button>
             );
