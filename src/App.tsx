@@ -211,9 +211,8 @@ export default function App() {
   const selectedIds = destinations.map((d) => d.chainId);
   const pickerChains = net.destinations.filter((d) => d.chainId !== source.chainId);
 
-  // ── Render: two-zone layout ─────────────────────────────────────────────
-  // Top (sticky config) + bottom (scrollable details). Each zone composes
-  // feature components; all business logic lives in the feature modules.
+  // ── Render: single scrolling page ─────────────────────────────────────────
+  // Everything flows in one column; the whole page scrolls together.
 
   // Info-only route: '#/contracts' renders the verified-contracts page.
   if (route === 'contracts') {
@@ -221,126 +220,109 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
+    <div className="min-h-dvh" style={{ background: 'var(--bg-gradient)' }}>
+      <div className="mx-auto max-w-lg px-4 pt-6 pb-8 space-y-4">
 
-      {/* ── TOP ZONE — sticky config panel ───────────────────────────────── */}
-      <div
-        className="sticky top-0 z-20 px-4 pt-6 pb-4 space-y-3"
-        style={{
-          background: 'var(--bg-gradient)',
-          borderBottom: destinations.length > 0 ? '1px solid var(--border)' : 'none',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-        }}
-      >
-        <div className="mx-auto max-w-lg space-y-3">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="display text-xl font-bold" style={{ color: 'var(--ink)' }}>MultiSend</h1>
-              <p className="text-xs" style={{ color: 'var(--muted)' }}>USDC to multiple chains in one tx</p>
-            </div>
-            <ConnectKitButton />
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="display text-xl font-bold" style={{ color: 'var(--ink)' }}>MultiSend</h1>
+            <p className="text-xs" style={{ color: 'var(--muted)' }}>USDC to multiple chains in one tx</p>
           </div>
-
-          <NetworkPanel
-            networkMode={networkMode}
-            step={step}
-            onNetworkSwitch={(mode) => switchNetwork(networkDeps, mode)}
-            sources={net.sources}
-            sourceChainId={sourceChainId}
-            onSourceSwitch={(id) => switchSourceChain(networkDeps, id, sourceChainId)}
-            sourceLabel={source.label}
-            sourceChainName={sourceChain.name}
-            contractDeployed={contractDeployed}
-            isConnected={isConnected}
-            formattedBalance={formattedBalance}
-            isBalanceError={isBalanceError}
-            balanceError={balanceError}
-            onRetryBalance={() => { void refetchBalance(); }}
-            isWrongChain={isWrongChain}
-            onSwitchToSource={() => switchChain({ chainId: SOURCE_CHAIN_ID })}
-          />
-
-          <DestinationComposer
-            globalAmount={globalAmount}
-            onGlobalAmountChange={handleGlobalAmountChange}
-            pickerOpen={pickerOpen}
-            onTogglePicker={() => setPickerOpen((o) => !o)}
-            destinationCount={destinations.length}
-            chains={pickerChains}
-            selectedIds={selectedIds}
-            onToggleChain={handleToggleChain}
-          />
+          <ConnectKitButton />
         </div>
-      </div>
 
-      {/* ── BOTTOM ZONE — scrollable chain list + summary + CTA ──────────── */}
-      <div className="flex-1 px-4 py-4">
-        <div className="mx-auto max-w-lg space-y-4">
+        <NetworkPanel
+          networkMode={networkMode}
+          step={step}
+          onNetworkSwitch={(mode) => switchNetwork(networkDeps, mode)}
+          sources={net.sources}
+          sourceChainId={sourceChainId}
+          onSourceSwitch={(id) => switchSourceChain(networkDeps, id, sourceChainId)}
+          sourceLabel={source.label}
+          sourceChainName={sourceChain.name}
+          contractDeployed={contractDeployed}
+          isConnected={isConnected}
+          formattedBalance={formattedBalance}
+          isBalanceError={isBalanceError}
+          balanceError={balanceError}
+          onRetryBalance={() => { void refetchBalance(); }}
+          isWrongChain={isWrongChain}
+          onSwitchToSource={() => switchChain({ chainId: SOURCE_CHAIN_ID })}
+        />
 
-          <DestinationList
+        <DestinationComposer
+          globalAmount={globalAmount}
+          onGlobalAmountChange={handleGlobalAmountChange}
+          pickerOpen={pickerOpen}
+          onTogglePicker={() => setPickerOpen((o) => !o)}
+          destinationCount={destinations.length}
+          chains={pickerChains}
+          selectedIds={selectedIds}
+          onToggleChain={handleToggleChain}
+        />
+
+        <DestinationList
+          destinations={destinations}
+          networkMode={networkMode}
+          loadingIndices={loadingIndices}
+          onRemove={handleRemove}
+          onRecipientChange={handleRecipientChange}
+        />
+
+        <FeeSummary
+          destinations={destinations}
+          networkMode={networkMode}
+          totals={totals}
+          loadingIndices={loadingIndices}
+        />
+
+        {step === 'done' && sendTxHash && (
+          <TrackingPanel
+            sendTxHash={sendTxHash}
+            sourceChainId={SOURCE_CHAIN_ID}
             destinations={destinations}
             networkMode={networkMode}
-            loadingIndices={loadingIndices}
-            onRemove={handleRemove}
-            onRecipientChange={handleRecipientChange}
+            walletAddress={address}
           />
+        )}
 
-          <FeeSummary
-            destinations={destinations}
-            networkMode={networkMode}
-            totals={totals}
-            loadingIndices={loadingIndices}
-          />
+        <SendButton
+          isConnected={isConnected}
+          isWrongChain={isWrongChain}
+          wrongChainLabel={sourceChain.name}
+          contractDeployed={contractDeployed}
+          step={step}
+          isSendPending={isSendPending}
+          isSendConfirming={isSendConfirming}
+          isSignPending={isSignPending}
+          destinationCount={destinations.length}
+          allQuotesReady={totals.allQuotesReady}
+          onSend={() => { void handleSend(); }}
+        />
 
-          {step === 'done' && sendTxHash && (
-            <TrackingPanel
-              sendTxHash={sendTxHash}
-              sourceChainId={SOURCE_CHAIN_ID}
-              destinations={destinations}
-              networkMode={networkMode}
-              walletAddress={address}
-            />
-          )}
+        {step === 'done' && (
+          <button
+            onClick={() => { setStep('idle'); resetSendState(); }}
+            className="w-full rounded-2xl py-3 text-sm font-medium transition-opacity hover:opacity-70"
+            style={{ color: 'var(--muted)' }}
+          >
+            Send again
+          </button>
+        )}
 
-          <SendButton
-            isConnected={isConnected}
-            isWrongChain={isWrongChain}
-            wrongChainLabel={sourceChain.name}
-            contractDeployed={contractDeployed}
-            step={step}
-            isSendPending={isSendPending}
-            isSendConfirming={isSendConfirming}
-            isSignPending={isSignPending}
-            destinationCount={destinations.length}
-            allQuotesReady={totals.allQuotesReady}
-            onSend={() => { void handleSend(); }}
-          />
+        {contractDeployed ? (
+          <p className="text-center text-xs mono pb-4" style={{ color: 'var(--subtle)' }}>
+            Contract:{' '}
+            <a href={`${sourceChain.explorerBase}/address/${MULTISEND_ADDRESS}`} target="_blank" rel="noreferrer" className="underline">
+              {MULTISEND_ADDRESS.slice(0, 8)}...{MULTISEND_ADDRESS.slice(-6)}
+            </a>
+          </p>
+        ) : (
+          <p className="text-center text-xs pb-4" style={{ color: 'var(--subtle)' }}>Deploy the contract to enable sending</p>
+        )}
 
-          {step === 'done' && (
-            <button
-              onClick={() => { setStep('idle'); resetSendState(); }}
-              className="w-full rounded-2xl py-3 text-sm font-medium transition-opacity hover:opacity-70"
-              style={{ color: 'var(--muted)' }}
-            >
-              Send again
-            </button>
-          )}
-
-          {contractDeployed ? (
-            <p className="text-center text-xs mono pb-4" style={{ color: 'var(--subtle)' }}>
-              Contract:{' '}
-              <a href={`${sourceChain.explorerBase}/address/${MULTISEND_ADDRESS}`} target="_blank" rel="noreferrer" className="underline">
-                {MULTISEND_ADDRESS.slice(0, 8)}...{MULTISEND_ADDRESS.slice(-6)}
-              </a>
-            </p>
-          ) : (
-            <p className="text-center text-xs pb-4" style={{ color: 'var(--subtle)' }}>Deploy the contract to enable sending</p>
-          )}
-
-          <PageFooter />
-        </div>
+        <PageFooter />
       </div>
     </div>
   );
