@@ -1,23 +1,20 @@
 # MultiSend — USDC to Multiple Chains
 
-> Built with [Arc Studio](https://studio.arc.io) — money-powered apps in minutes.
-
 Send USDC to multiple destination chains simultaneously in a single transaction,
 using CCTP v2 (`TokenMessengerWithFees`) with Circle's upfront-fee Forwarding Service.
 The UI lets you configure per-chain amounts, fetches real-time fee quotes from
 Circle's Quote API, shows the exact fee breakdown (principal + forwarding fee per chain),
 and executes the multi-chain send in one approve + one `multiSend` call.
 
-Source chain: **Arc Testnet** (chain ID `5042002`) — USDC is the native gas token there.
+Source chains: **Arc Testnet** (chain ID `5042002`) in testnet mode; **Arc**, **Arbitrum**,
+**Avalanche**, and **Base** in mainnet mode. USDC is the native gas token on Arc.
 
-## Deployed Contracts (Arc Testnet)
+## Deployed Contracts
 
-| Contract | Address |
-|---|---|
-| MultiChainUSDCSend v1 (deprecated) | [`0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e`](https://explorer.testnet.arc.io/address/0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e) |
-| MultiChainUSDCSend v2 (deprecated) | [`0x014f84afa85297376a4a04d4b5922f3ec1f4a215`](https://explorer.testnet.arc.io/address/0x014f84afa85297376a4a04d4b5922f3ec1f4a215) |
-| MultiChainUSDCSend v3 (deprecated) | [`0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb`](https://explorer.testnet.arc.io/address/0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb) |
-| MultiChainUSDCSend v4 (active) | [`0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f`](https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f) |
+| Contract | Network | Address |
+|---|---|---|
+| MultiChainUSDCSend v4 (active) | Arc Testnet | [`0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f`](https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f) |
+| MultiChainUSDCSend v3 (active, +EIP-2612 permit) | Arc Mainnet | [`0xB00cDe5662F5190d9F76B3629C16145Be7B28c57`](https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57) |
 
 ## Tech Stack
 

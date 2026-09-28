@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { parseUsdcAmount } from '@/onchain/money';
 import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
-import type { ChainDestination, FeeQuote, FeeQuoteItem } from '../components/types';
+import type { ChainDestination, FeeQuote, FeeQuoteItem } from '../destinations/types';
 
 // CCTP v2 Quote API — base URL is network-scoped (sandbox for testnet,
 // production for mainnet). See NETWORKS in '@/cctp-chains'.
