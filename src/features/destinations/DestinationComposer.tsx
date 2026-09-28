@@ -43,27 +43,20 @@ export function DestinationComposer(props: DestinationComposerProps) {
           <span className="text-sm font-semibold shrink-0" style={{ color: 'var(--muted)' }}>USDC</span>
         </div>
 
-        {/* Picker toggle — compact square button */}
+        {/* Picker toggle — opens the chain picker modal */}
         <button
           onClick={onTogglePicker}
-          className="flex flex-col items-center justify-center rounded-2xl px-3 gap-0.5 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+          className="flex items-center justify-center gap-1.5 rounded-2xl px-4 transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
           style={{
             background: pickerOpen ? 'var(--accent)' : 'var(--surface)',
             border: `1.5px solid ${pickerOpen ? 'var(--accent)' : 'var(--border)'}`,
-            color: pickerOpen ? '#fff' : 'var(--muted)',
-            minWidth: '72px',
+            color: pickerOpen ? '#fff' : 'var(--ink)',
           }}
         >
           <Plus className="size-4" />
-          <span className="text-xs font-semibold">Chains</span>
-          {destinationCount > 0 && (
-            <span
-              className="text-xs font-bold tabular-nums leading-none"
-              style={{ color: pickerOpen ? 'rgba(255,255,255,0.8)' : 'var(--accent)' }}
-            >
-              {destinationCount}
-            </span>
-          )}
+          <span className="text-sm font-semibold whitespace-nowrap tabular-nums">
+            To Chains ({destinationCount})
+          </span>
         </button>
       </div>
 
