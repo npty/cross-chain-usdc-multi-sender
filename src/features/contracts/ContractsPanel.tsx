@@ -26,17 +26,15 @@ function StatusBadge({ verified }: { verified: boolean }) {
 
 function VanityShortAddress({ address }: { address: string }) {
   // Vanity deployments start with 0x001 (testnet) or 0x002 (mainnet).
-  // Bold that prefix so the network is visible at a glance.
+  // Bold that prefix in place so the network is visible at a glance.
   const short = shortAddress(address);
   if (!/^0x00[12]/i.test(address)) return <>{short}</>;
   return (
-    <>
+    <span>
       {short.slice(0, 2)}
-      <span className="font-bold" style={{ color: 'var(--ink)' }}>
-        {short.slice(2, 5)}
-      </span>
+      <b>{short.slice(2, 5)}</b>
       {short.slice(5)}
-    </>
+    </span>
   );
 }
 
