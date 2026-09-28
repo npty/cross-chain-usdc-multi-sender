@@ -1,8 +1,14 @@
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 
 import { buildTxExplorerUrl } from '@/onchain/facts';
-import { buildDestinationAddressUrl, getNetworkChain, type NetworkMode } from '@/cctp-chains';
+import {
+  buildDestinationAddressUrl,
+  getNetworkChain,
+  NETWORKS,
+  type NetworkMode,
+} from '@/cctp-chains';
 import type { ChainDestination } from '../destinations/types';
+import { useArrivalTracking, type ArrivalInfo } from './useArrivalTracking';
 
 interface TrackingPanelProps {
   sendTxHash: `0x${string}`;
@@ -12,12 +18,55 @@ interface TrackingPanelProps {
   walletAddress?: string;
 }
 
+function ArrivalBadge({ info, live }: { info: ArrivalInfo | undefined; live: boolean }) {
+  if (!info || info.state === 'pending') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] whitespace-nowrap" style={{ color: 'var(--subtle)' }}>
+        {live && <Loader2 className="size-3 animate-spin" />}
+        Waiting
+      </span>
+    );
+  }
+  if (info.state === 'attested') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" style={{ color: 'var(--accent)' }}>
+        {live && <Loader2 className="size-3 animate-spin" />}
+        Attested
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] font-semibold whitespace-nowrap" style={{ color: 'var(--success)' }}>
+      <CheckCircle2 className="size-3" />
+      Arrived
+    </span>
+  );
+}
+
 /**
- * Post-send confirmation: source transaction link plus per-destination
- * explorer links so the user can track each CCTP transfer.
+ * Post-send confirmation: source transaction link plus live per-destination
+ * arrival tracking, polled from Circle's v2 messages API.
  */
 export function TrackingPanel(props: TrackingPanelProps) {
   const { sendTxHash, sourceChainId, destinations, networkMode, walletAddress } = props;
+
+  const net = NETWORKS[networkMode];
+  const sourceDomain =
+    net.sources.find((s) => s.chainId === sourceChainId)?.cctpDomain ?? 26;
+  const destinationDomains = destinations.map(
+    (d) => getNetworkChain(networkMode, d.chainId)?.cctpDomain ?? -1,
+  );
+
+  const { arrivals, live } = useArrivalTracking({
+    apiBase: net.quoteApiBase,
+    sourceDomain,
+    txHash: sendTxHash,
+    destinationDomains,
+  });
+
+  const allArrived =
+    destinationDomains.length > 0 &&
+    destinationDomains.every((domain) => arrivals[domain]?.state === 'arrived');
 
   return (
     <div className="rounded-2xl p-4" style={{ background: 'rgba(26,128,71,0.08)', border: '1px solid rgba(26,128,71,0.2)' }}>
@@ -30,18 +79,22 @@ export function TrackingPanel(props: TrackingPanelProps) {
         View source transaction on explorer <ExternalLink className="size-3" />
       </a>
 
-      {/* Track your transfers — per-destination explorer links */}
+      {/* Track your transfers — live per-destination arrival status */}
       <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(26,128,71,0.2)' }}>
         <p className="text-xs font-semibold mb-1" style={{ color: 'var(--ink)' }}>Track your transfers</p>
         <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--muted)' }}>
-          CCTP transfers typically land in ~1–2 minutes. Open your wallet address on each
-          destination explorer below to confirm the USDC arrived.
+          {allArrived
+            ? 'All transfers arrived.'
+            : live
+              ? 'Watching each destination for your USDC. This updates automatically.'
+              : 'Stopped checking for updates. Open the explorer links below to confirm arrival.'}
         </p>
         <div className="space-y-2">
-          {destinations.map((dest) => {
+          {destinations.map((dest, i) => {
             const chain = getNetworkChain(networkMode, dest.chainId)!;
             const recipient = dest.recipient || walletAddress || '';
             const url = recipient ? buildDestinationAddressUrl(networkMode, dest.chainId, recipient) : undefined;
+            const domain = destinationDomains[i];
             return (
               <div
                 key={dest.chainId}
@@ -56,19 +109,22 @@ export function TrackingPanel(props: TrackingPanelProps) {
                     {dest.amount} USDC → {recipient ? `${recipient.slice(0, 6)}...${recipient.slice(-4)}` : '—'}
                   </p>
                 </div>
-                {url ? (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
-                    style={{ background: 'var(--accent)', color: '#fff' }}
-                  >
-                    Track <ExternalLink className="size-3" />
-                  </a>
-                ) : (
-                  <span className="text-xs shrink-0" style={{ color: 'var(--subtle)' }}>No explorer</span>
-                )}
+                <div className="flex shrink-0 items-center gap-2.5">
+                  <ArrivalBadge info={domain >= 0 ? arrivals[domain] : undefined} live={live} />
+                  {url ? (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
+                      style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                      Track <ExternalLink className="size-3" />
+                    </a>
+                  ) : (
+                    <span className="text-xs shrink-0" style={{ color: 'var(--subtle)' }}>No explorer</span>
+                  )}
+                </div>
               </div>
             );
           })}
