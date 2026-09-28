@@ -526,6 +526,9 @@ export default function App() {
             <div>
               <h1 className="display text-xl font-bold" style={{ color: 'var(--ink)' }}>MultiSend</h1>
               <p className="text-xs" style={{ color: 'var(--muted)' }}>USDC to multiple chains in one tx</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--subtle)' }}>
+                Independent developer tool — not affiliated with, endorsed by, or sponsored by Circle Internet Financial, Inc.
+              </p>
             </div>
             <ConnectKitButton />
           </div>
@@ -865,6 +868,13 @@ export default function App() {
           ) : (
             <p className="text-center text-xs pb-4" style={{ color: 'var(--subtle)' }}>Deploy the contract to enable sending</p>
           )}
+
+          {/* Independence disclaimer */}
+          <p className="text-center text-xs leading-relaxed px-2 pb-6" style={{ color: 'var(--subtle)' }}>
+            MultiSend is an independent open-source tool. It is not affiliated with, endorsed by,
+            or sponsored by Circle Internet Financial, Inc. It simply interacts with Circle's
+            public, permissionless CCTP smart contracts, which any developer can build on.
+          </p>
         </div>
       </div>
     </div>
