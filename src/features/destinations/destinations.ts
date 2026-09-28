@@ -39,6 +39,30 @@ export function toggleDestination(
   return [...destinations, createDestination(chainId, opts)];
 }
 
+/**
+ * Replace the destination list with exactly `chainIds`, preserving any
+ * existing entries (amounts, recipients, quotes) for chains that stay.
+ * Used by the picker's quick-select actions (select all / random N).
+ */
+export function setDestinationChains(
+  destinations: ChainDestination[],
+  chainIds: number[],
+  opts: NewDestinationOpts,
+): ChainDestination[] {
+  const prevById = new Map(destinations.map((d) => [d.chainId, d]));
+  return chainIds.map((id) => prevById.get(id) ?? createDestination(id, opts));
+}
+
+/** Fisher-Yates sample: pick up to `n` ids in random order. */
+export function pickRandomIds(ids: number[], n: number): number[] {
+  const arr = [...ids];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, Math.min(n, arr.length));
+}
+
 export function removeDestination(destinations: ChainDestination[], index: number): ChainDestination[] {
   return destinations.filter((_, i) => i !== index);
 }

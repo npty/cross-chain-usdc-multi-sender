@@ -12,6 +12,7 @@ interface DestinationComposerProps {
   chains: OnchainChain[];
   selectedIds: number[];
   onToggleChain: (chainId: number) => void;
+  onSelectMany: (chainIds: number[]) => void;
 }
 
 /**
@@ -21,7 +22,7 @@ interface DestinationComposerProps {
 export function DestinationComposer(props: DestinationComposerProps) {
   const {
     globalAmount, onGlobalAmountChange, pickerOpen, onTogglePicker,
-    destinationCount, chains, selectedIds, onToggleChain,
+    destinationCount, chains, selectedIds, onToggleChain, onSelectMany,
   } = props;
 
   return (
@@ -66,6 +67,7 @@ export function DestinationComposer(props: DestinationComposerProps) {
         chains={chains}
         selectedIds={selectedIds}
         onToggle={onToggleChain}
+        onSelectMany={onSelectMany}
       />
     </div>
   );

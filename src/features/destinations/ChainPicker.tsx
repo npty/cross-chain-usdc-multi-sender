@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { OnchainChain } from '@/onchain/facts';
+import { pickRandomIds } from './destinations';
 
 interface ChainPickerProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface ChainPickerProps {
   chains: OnchainChain[];
   selectedIds: number[];
   onToggle: (chainId: number) => void;
+  onSelectMany: (chainIds: number[]) => void;
 }
 
 const ACCENT_PALETTE = [
@@ -35,7 +37,8 @@ function shortName(name: string): string {
     .replace(' Blaze', '');
 }
 
-export function ChainPicker({ open, onClose, chains, selectedIds, onToggle }: ChainPickerProps) {
+export function ChainPicker({ open, onClose, chains, selectedIds, onToggle, onSelectMany }: ChainPickerProps) {
+  const allIds = chains.map((c) => c.chainId);
   // Close on Escape + lock background scroll while open.
   useEffect(() => {
     if (!open) return;
@@ -91,6 +94,28 @@ export function ChainPicker({ open, onClose, chains, selectedIds, onToggle }: Ch
               >
                 <X className="size-4" />
               </button>
+            </div>
+
+            {/* Quick-select actions */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                { label: 'Select all', pick: () => allIds },
+                { label: 'Random 5', pick: () => pickRandomIds(allIds, 5) },
+                { label: 'Random 10', pick: () => pickRandomIds(allIds, 10) },
+              ].map(({ label, pick }) => (
+                <button
+                  key={label}
+                  onClick={() => onSelectMany(pick())}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--accent)',
+                    border: '1.5px solid var(--accent)',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             <div className="flex flex-wrap gap-2">

@@ -26,6 +26,7 @@ import {
   applyGlobalAmount,
   removeDestination,
   sanitizeAmountInput,
+  setDestinationChains,
   toggleDestination,
   updateRecipient,
 } from './features/destinations/destinations';
@@ -176,6 +177,13 @@ export default function App() {
     );
   }
 
+  function handleSelectChains(ids: number[]) {
+    if (step !== 'idle') return;
+    setDestinations((prev) =>
+      setDestinationChains(prev, ids, { networkMode, amount: globalAmount, walletAddress: address }),
+    );
+  }
+
   function handleGlobalAmountChange(value: string) {
     const v = sanitizeAmountInput(value);
     if (v === null) return;
@@ -279,6 +287,7 @@ export default function App() {
           chains={pickerChains}
           selectedIds={selectedIds}
           onToggleChain={handleToggleChain}
+          onSelectMany={handleSelectChains}
         />
 
         <DestinationList
