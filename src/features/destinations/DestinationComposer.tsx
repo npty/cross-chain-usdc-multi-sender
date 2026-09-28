@@ -1,5 +1,3 @@
-import { Plus } from 'lucide-react';
-
 import type { OnchainChain } from '@/onchain/facts';
 import { ChainPicker } from './ChainPicker';
 
@@ -54,7 +52,6 @@ export function DestinationComposer(props: DestinationComposerProps) {
             color: pickerOpen ? '#fff' : 'var(--ink)',
           }}
         >
-          <Plus className="size-4" />
           <span className="text-sm font-semibold whitespace-nowrap tabular-nums">
             To Chains ({destinationCount})
           </span>
