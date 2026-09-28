@@ -14,7 +14,7 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 
 | Contract | Chain | Address | Explorer |
 |---|---|---|---|
-| MultiChainUSDCSend v4 (active) | Arc Testnet | 0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f | https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f |
+| MultiChainUSDCSend v5 (active, +EIP-2612 permit) | Arc Testnet | 0x24293D51AB51Fa8c7E7E3E6920eA7262a0214100 | https://explorer.testnet.arc.io/address/0x24293D51AB51Fa8c7E7E3E6920eA7262a0214100 |
 | MultiChainUSDCSend v3 (active, +EIP-2612 permit) | Arc Mainnet | 0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 | https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 |
 
 ## Environment Variables

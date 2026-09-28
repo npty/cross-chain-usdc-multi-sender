@@ -1,64 +1,103 @@
-# MultiSend — USDC to Multiple Chains
+# MultiSend
 
-Send USDC to multiple destination chains simultaneously in a single transaction,
-using CCTP v2 (`TokenMessengerWithFees`) with Circle's upfront-fee Forwarding Service.
-The UI lets you configure per-chain amounts, fetches real-time fee quotes from
-Circle's Quote API, shows the exact fee breakdown (principal + forwarding fee per chain),
-and executes the multi-chain send in one approve + one `multiSend` call.
+Send USDC to multiple destination chains in a single transaction via Circle CCTP v2
+(`TokenMessengerWithFees`). Pick destinations, set per-chain amounts, get real-time
+fee quotes from Circle's Quote API, then execute everything in one transaction with
+EIP-2612 gasless approval (no separate approve tx).
 
-Source chains: **Arc Testnet** (chain ID `5042002`) in testnet mode; **Arc**, **Arbitrum**,
-**Avalanche**, and **Base** in mainnet mode. USDC is the native gas token on Arc.
+Source chains: Arc Testnet in testnet mode; Arc, Arbitrum, Avalanche, and Base in
+mainnet mode. On Arc, USDC is the native gas token.
 
-## Deployed Contracts
+## Features
 
-| Contract | Network | Address |
-|---|---|---|
-| MultiChainUSDCSend v4 (active) | Arc Testnet | [`0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f`](https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f) |
-| MultiChainUSDCSend v3 (active, +EIP-2612 permit) | Arc Mainnet | [`0xB00cDe5662F5190d9F76B3629C16145Be7B28c57`](https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57) |
+- Batch sends to up to 10 destination chains in one transaction
+- Real-time fee quotes per chain from Circle's Forwarding Service Quote API
+- Fee breakdown: ERC-20 principal plus per-chain forwarding fee, shown before sending
+- EIP-2612 permit: single-transaction approval and send on all chains
+- Post-send tracking panel with explorer links per destination
+- Testnet/Mainnet toggle; wallet auto-switches to the selected source chain
 
-## Tech Stack
+## Deployed contracts
 
-- **Frontend:** React 18, Vite 6, TypeScript, Tailwind CSS, framer-motion, Sonner toasts
-- **Web3:** wagmi v2, viem v2, ConnectKit (injected wallet: MetaMask, etc.)
-- **Contracts:** Solidity 0.8.28 + Foundry (`evmVersion: paris`). Sources in `contracts/`,
-  unit tests in `contracts/test/`
-- **Token:** USDC — 6 decimals ERC-20 (`0x3600000000000000000000000000000000000000` on Arc).
-  On Arc, USDC is also the native gas token (18-dec native view = same pool).
+All run the same permit-version source (`permitAndMultiSend`), confirmed by on-chain
+bytecode comparison.
 
-## Getting Started
+| Network | Address |
+|---|---|
+| Arc Testnet | [`0x24293D51AB51Fa8c7E7E3E6920eA7262a0214100`](https://explorer.testnet.arc.io/address/0x24293D51AB51Fa8c7E7E3E6920eA7262a0214100) |
+| Arc Mainnet | [`0xB00cDe5662F5190d9F76B3629C16145Be7B28c57`](https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57) |
+| Arbitrum | [`0x0032a5147f96039b62d08f651884aa58cfa30772`](https://arbiscan.io/address/0x0032a5147f96039b62d08f651884aa58cfa30772) |
+| Base | [`0x0032a5147f96039b62d08f651884aa58cfa30772`](https://basescan.org/address/0x0032a5147f96039b62d08f651884aa58cfa30772) |
+| Avalanche | [`0x24293d51ab51fa8c7e7e3e6920ea7262a0214100`](https://snowtrace.io/address/0x24293d51ab51fa8c7e7e3e6920ea7262a0214100) |
+
+## Local dev
 
 ```bash
-# install JS deps (bun) and set up the contract address
 bun install
-cp .env.example .env
-# edit .env → VITE_MULTISEND_ADDRESS=0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f
-
-# run the dev server
+cp .env.example .env   # set VITE_MULTISEND_ADDRESS_* (see below)
 bun run dev
 ```
 
 Get testnet USDC from https://faucet.circle.com.
 
+### Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `VITE_MULTISEND_ADDRESS` | Contract address on Arc Testnet |
+| `VITE_MULTISEND_ADDRESS_MAINNET` | Contract address on Arc Mainnet |
+| `VITE_MULTISEND_ADDRESS_ARBITRUM` | Contract address on Arbitrum |
+| `VITE_MULTISEND_ADDRESS_BASE` | Contract address on Base |
+| `VITE_MULTISEND_ADDRESS_AVALANCHE` | Contract address on Avalanche |
+
 ## Contracts
+
+Solidity 0.8.28, Foundry (`evm_version: paris`, optimizer 200 runs).
 
 ```bash
 bun run contracts:build   # forge build
 bun run contracts:test    # forge test
 ```
 
-`contracts/MultiChainUSDCSend.sol` — batches multiple CCTP v2 `depositForBurnWithFees`
-calls into one transaction. Pulls the 6-decimal ERC-20 principal per destination,
-pays per-destination forwarding fees in native (18-dec) USDC via `msg.value`,
-and refunds any overpaid fee. Max 10 destinations per call.
+`contracts/MultiChainUSDCSend.sol` batches CCTP v2 `depositForBurnWithFees` calls.
+Constructor takes `(tokenMessengerWithFees, usdc)`. Deploys use plain `cast`:
 
-## Environment Variables
+```bash
+# encode constructor args, append to init bytecode, then:
+cast send --rpc-url <rpc> --account <deployer> --create <initcode+args>
+```
 
-- `VITE_MULTISEND_ADDRESS` — deployed `MultiChainUSDCSend` address (see `.env.example`).
+(`cast send --create` rejects wallet flags placed after the bytecode arg; put them
+before. Testnet deploys can also go through `bun run deploy:self`, which uses
+Circle's Smart Contract Platform API with faucet funding.)
 
-## Key Files
+Verify on Blockscout explorers with:
 
-- `src/App.tsx` — main application logic
-- `src/config.ts` — wagmi config (Arc Testnet + CCTP v2 Forwarding destination testnets)
-- `src/cctpChains.ts` — canonical CCTP v2 destination chain list with domains + USDC addresses
-- `src/components/` — UI components (`ChainPicker`, `ChainRow`, `AddChainModal`)
-- `contracts/MultiChainUSDCSend.sol` — the batching contract
+```bash
+forge verify-contract <address> contracts/MultiChainUSDCSend.sol:MultiChainUSDCSend \
+  --chain <chain-id> --verifier blockscout \
+  --verifier-url "https://explorer.<chain>.io/api/" \
+  --constructor-args 0x<abi-encoded-args>
+```
+
+## Project structure
+
+```
+src/
+  App.tsx                    # thin composition layer: wires features together
+  config.ts                  # wagmi config (chains, connectors, transports)
+  features/
+    destinations/            # destination picker, list, composer (UI + pure helpers)
+    fees/                    # fee quotes, totals, fee summary UI
+    network/                 # network panel, chain switching
+    send/                    # SendFlow orchestration, permit signing, send button
+    tracking/                # post-send transfer tracking panel
+  shared/                    # reusable helpers: addresses, errors
+  onchain/                   # chain facts, money formatting
+contracts/
+  MultiChainUSDCSend.sol     # batching contract
+  test/                      # forge unit tests
+```
+
+Business logic lives in the feature folders (`*.ts`); components (`*.tsx`) handle
+only UI. `App.tsx` composes them.

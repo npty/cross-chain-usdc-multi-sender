@@ -125,7 +125,7 @@ export function NetworkPanel(props: NetworkPanelProps) {
                 onClick={onRetryBalance}
                 className="text-xs leading-tight underline"
                 style={{ color: 'var(--danger)' }}
-                title={balanceError instanceof Error ? balanceError.message : String(balanceError ?? '')}
+                title={balanceError instanceof Error ? balanceError.message : 'Balance failed to load'}
               >
                 Balance failed to load — tap to retry
               </button>

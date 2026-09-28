@@ -252,7 +252,7 @@ export default function App() {
             formattedBalance={formattedBalance}
             isBalanceError={isBalanceError}
             balanceError={balanceError}
-            onRetryBalance={() => refetchBalance()}
+            onRetryBalance={() => { void refetchBalance(); }}
             isWrongChain={isWrongChain}
             onSwitchToSource={() => switchChain({ chainId: SOURCE_CHAIN_ID })}
           />
