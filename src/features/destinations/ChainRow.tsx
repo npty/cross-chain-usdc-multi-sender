@@ -3,6 +3,7 @@ import { X, Loader2 } from 'lucide-react';
 import { PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import bs58 from 'bs58';
+import { useNow } from '@/shared/useNow';
 import type { ChainDestination } from './types';
 import type { OnchainChain } from '@/onchain/facts';
 
@@ -27,8 +28,8 @@ function fmt(wei: string) {
   return (Number(wei) / 1e18).toFixed(4);
 }
 
-function expiryLabel(expiresAt: number): string {
-  const s = Math.floor((expiresAt - Date.now()) / 1000);
+function expiryLabel(expiresAt: number, now: number): string {
+  const s = Math.floor((expiresAt - now) / 1000);
   if (s <= 0) return 'Expired';
   const m = Math.floor(s / 60);
   return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
@@ -37,12 +38,13 @@ function expiryLabel(expiresAt: number): string {
 export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLoading }: ChainRowProps) {
   const quote = dest.feeQuote;
   const hasAmount = !!dest.amount && parseFloat(dest.amount) > 0;
+  const now = useNow(1000);
 
   const totalFee = quote ? fmt(quote.feeTotalAmount) : null;
   const fwd = quote?.items.find((i) => i.type === 'FORWARD');
   const pre = quote?.items.find((i) => i.type === 'PRE_FINALITY');
 
-  const expStr = quote ? expiryLabel(quote.expiresAt) : '';
+  const expStr = quote ? expiryLabel(quote.expiresAt, now) : '';
   const almostGone = expStr === 'Expired' ||
     (expStr !== '' && !expStr.includes('m') && parseInt(expStr) <= 30);
 
