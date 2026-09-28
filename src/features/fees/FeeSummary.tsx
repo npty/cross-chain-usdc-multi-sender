@@ -54,7 +54,7 @@ export function FeeSummary({ destinations, networkMode, totals, loadingIndices }
                   {chain.name}
                 </span>
                 <span className="text-xs tabular-nums font-medium" style={{ color: 'var(--ink-2)' }}>
-                  {dest.amount ? `${dest.amount} + ` : ''}{feeDisplay} fee
+                  {feeDisplay} fee
                 </span>
               </div>
             );
