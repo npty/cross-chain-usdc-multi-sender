@@ -2,7 +2,6 @@ import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 
 import { buildTxExplorerUrl } from '@/onchain/facts';
 import {
-  buildDestinationAddressUrl,
   getNetworkChain,
   NETWORKS,
   type NetworkMode,
@@ -45,7 +44,8 @@ function ArrivalBadge({ info, live }: { info: ArrivalInfo | undefined; live: boo
 
 /**
  * Post-send confirmation: source transaction link plus live per-destination
- * arrival tracking, polled from Circle's v2 messages API.
+ * arrival tracking, polled from Circle's v2 messages API. Once a destination
+ * shows delivered, its row links the forwarder's delivery transaction.
  */
 export function TrackingPanel(props: TrackingPanelProps) {
   const { sendTxHash, sourceChainId, destinations, networkMode, walletAddress } = props;
@@ -87,14 +87,14 @@ export function TrackingPanel(props: TrackingPanelProps) {
             ? 'All transfers arrived.'
             : live
               ? 'Watching each destination for your USDC. This updates automatically.'
-              : 'Stopped checking for updates. Open the explorer links below to confirm arrival.'}
+              : 'Stopped checking for updates. The transfers may still complete.'}
         </p>
         <div className="space-y-2">
           {destinations.map((dest, i) => {
             const chain = getNetworkChain(networkMode, dest.chainId)!;
             const recipient = dest.recipient || walletAddress || '';
-            const url = recipient ? buildDestinationAddressUrl(networkMode, dest.chainId, recipient) : undefined;
             const domain = destinationDomains[i];
+            const deliveryTxHash = domain >= 0 ? arrivals[domain]?.forwardTxHash : undefined;
             return (
               <div
                 key={dest.chainId}
@@ -111,18 +111,17 @@ export function TrackingPanel(props: TrackingPanelProps) {
                 </div>
                 <div className="flex shrink-0 items-center gap-2.5">
                   <ArrivalBadge info={domain >= 0 ? arrivals[domain] : undefined} live={live} />
-                  {url ? (
+                  {deliveryTxHash && (
                     <a
-                      href={url}
+                      href={buildTxExplorerUrl(dest.chainId, deliveryTxHash)}
                       target="_blank"
                       rel="noreferrer"
+                      title="View delivery transaction"
                       className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all hover:scale-[1.03] active:scale-[0.97]"
                       style={{ background: 'var(--accent)', color: '#fff' }}
                     >
-                      Track <ExternalLink className="size-3" />
+                      View tx <ExternalLink className="size-3" />
                     </a>
-                  ) : (
-                    <span className="text-xs shrink-0" style={{ color: 'var(--subtle)' }}>No explorer</span>
                   )}
                 </div>
               </div>
