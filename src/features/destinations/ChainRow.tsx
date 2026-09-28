@@ -1,5 +1,5 @@
 import type React from 'react';
-import { X, PlusCircle, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { PublicKey } from '@solana/web3.js';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import bs58 from 'bs58';
@@ -32,55 +32,6 @@ function expiryLabel(expiresAt: number): string {
   if (s <= 0) return 'Expired';
   const m = Math.floor(s / 60);
   return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
-}
-
-type EthProvider = { request: (a: { method: string; params?: unknown }) => Promise<unknown> };
-
-async function addToken(chain: OnchainChain & { rpcUrls?: string[] }): Promise<void> {
-  if (!chain.usdc || !window.ethereum) return;
-  const provider = window.ethereum as EthProvider;
-  const chainHex = `0x${chain.chainId.toString(16)}`;
-
-  // 1. Register the chain in the wallet (no-op if already known).
-  //    We grab RPC + explorer from the OnchainChain record.
-  try {
-    await provider.request({
-      method: 'wallet_addEthereumChain',
-      params: [{
-        chainId: chainHex,
-        chainName: chain.name,
-        nativeCurrency: {
-          name: chain.nativeCurrency.symbol,
-          symbol: chain.nativeCurrency.symbol,
-          decimals: chain.nativeCurrency.decimals,
-        },
-        rpcUrls: chain.rpcUrls?.length ? chain.rpcUrls : [''],
-        blockExplorerUrls: chain.explorerBase ? [chain.explorerBase] : undefined,
-      }],
-    });
-  } catch {
-    // Wallet already knows the chain, or user dismissed — continue anyway.
-  }
-
-  // 2. Switch to that chain so wallet_watchAsset resolves on the right network.
-  await provider.request({
-    method: 'wallet_switchEthereumChain',
-    params: [{ chainId: chainHex }],
-  });
-
-  // 3. Register the USDC token.
-  await provider.request({
-    method: 'wallet_watchAsset',
-    params: {
-      type: 'ERC20',
-      options: {
-        address: chain.usdc.address,
-        symbol: 'USDC',
-        decimals: chain.usdc.decimals,
-        image: 'https://assets.coingecko.com/coins/images/6319/large/usdc.png',
-      },
-    },
-  });
 }
 
 export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLoading }: ChainRowProps) {
@@ -128,12 +79,15 @@ export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLo
             <p className="text-xs font-bold tabular-nums mono leading-tight" style={{ color: 'var(--ink)' }}>
               {totalFee} USDC
             </p>
-            {/* Breakdown tooltip-style: fwd + pre */}
-            <p className="text-xs mono leading-tight" style={{ color: 'var(--subtle)' }}>
-              {fwd ? `fwd ${fmt(fwd.amount)}` : ''}
-              {fwd && pre ? ' · ' : ''}
-              {pre ? `fast ${fmt(pre.amount)}` : ''}
-            </p>
+            {/* Breakdown: only when it adds info beyond the total (pre-finality split).
+                A forward-only quote would just duplicate the total above. */}
+            {pre && (
+              <p className="text-xs mono leading-tight" style={{ color: 'var(--subtle)' }}>
+                {fwd ? `fwd ${fmt(fwd.amount)}` : ''}
+                {fwd ? ' · ' : ''}
+                {`fast ${fmt(pre.amount)}`}
+              </p>
+            )}
           </>
         ) : dest.feeError ? (
           <span className="text-xs" style={{ color: 'var(--danger)' }}>error</span>
@@ -155,19 +109,6 @@ export function ChainRow({ dest, chain, index, onRemove, onRecipientChange, isLo
         >
           {expStr}
         </span>
-      )}
-
-      {/* Add USDC to wallet */}
-      {chain.usdc && (
-        <button
-          onClick={() => { void addToken(chain); }}
-          title={`Add USDC on ${chain.name} to wallet`}
-          className="shrink-0 flex items-center justify-center size-7 rounded-full transition-colors hover:opacity-70"
-          style={{ color: 'var(--accent)', background: 'rgba(0,115,250,0.07)' }}
-          aria-label="Add USDC to wallet"
-        >
-          <PlusCircle className="size-3.5" />
-        </button>
       )}
 
       {/* Remove */}
