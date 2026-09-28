@@ -512,11 +512,6 @@ export interface SourceChain {
   permitName: string;
   /** EIP-2612 domain version of this chain's USDC (verified on-chain). */
   permitVersion: string;
-  /**
-   * Whether the deployed contract supports EIP-2612 permit (permitAndMultiSend).
-   * When false the app falls back to a separate approve transaction.
-   */
-  supportsPermit: boolean;
 }
 
 export interface NetworkConfig {
@@ -548,7 +543,6 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
         contractAddress: envAddress('VITE_MULTISEND_ADDRESS'),
         permitName: 'USDC',
         permitVersion: '2',
-        supportsPermit: false,
       },
     ],
     destinations: TESTNET_DEST_CHAINS,
@@ -565,7 +559,6 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
         contractAddress: envAddress('VITE_MULTISEND_ADDRESS_MAINNET'),
         permitName: 'USDC',
         permitVersion: '2',
-        supportsPermit: true,
       },
       {
         chainId: 42161,
@@ -577,7 +570,6 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
         ),
         permitName: 'USD Coin',
         permitVersion: '2',
-        supportsPermit: true,
       },
       {
         chainId: 43114,
@@ -589,7 +581,6 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
         ),
         permitName: 'USD Coin',
         permitVersion: '2',
-        supportsPermit: true,
       },
       {
         chainId: 8453,
@@ -601,7 +592,6 @@ export const NETWORKS: Record<NetworkMode, NetworkConfig> = {
         ),
         permitName: 'USD Coin',
         permitVersion: '2',
-        supportsPermit: true,
       },
     ],
     destinations: MAINNET_DEST_CHAINS,

@@ -1,6 +1,5 @@
 import type { PublicClient } from 'viem';
 import type { useWriteContract, useSignTypedData } from 'wagmi';
-import { erc20Abi } from 'viem';
 
 import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import { parseUsdcAmount } from '@/onchain/money';
@@ -9,20 +8,6 @@ import type { ChainDestination } from '../destinations/types';
 import { signPermit, type PermitConfig } from './permit';
 
 export const MULTISEND_ABI = [
-  {
-    type: 'function', name: 'multiSend', stateMutability: 'payable',
-    inputs: [{
-      name: 'requests', type: 'tuple[]',
-      components: [
-        { name: 'destinationDomain', type: 'uint32' },
-        { name: 'mintRecipient', type: 'bytes32' },
-        { name: 'amount', type: 'uint256' },
-        { name: 'fee', type: 'uint256' },
-        { name: 'signedQuote', type: 'bytes' },
-      ],
-    }],
-    outputs: [],
-  },
   {
     type: 'function', name: 'permitAndMultiSend', stateMutability: 'payable',
     inputs: [
@@ -94,24 +79,22 @@ export interface SendFlowDeps {
   sourceChainId: number;
   multisendAddress: `0x${string}`;
   sourceUsdcAddress: `0x${string}`;
-  /** Null on chains whose USDC lacks EIP-2612 — falls back to a separate approve tx. */
-  permit: PermitConfig | null;
+  /** EIP-2612 domain of this chain's USDC — the send is always permit-based. */
+  permit: PermitConfig;
   publicClient: PublicClient;
-  approveContractAsync: ReturnType<typeof useWriteContract>['writeContractAsync'];
   sendContractAsync: ReturnType<typeof useWriteContract>['writeContractAsync'];
   signTypedDataAsync: ReturnType<typeof useSignTypedData>['signTypedDataAsync'];
 }
 
 export interface SendHooks {
   onStep: (step: SendStep) => void;
-  onApproveHash: (hash: `0x${string}`) => void;
   onSendHash: (hash: `0x${string}`) => void;
 }
 
 /**
  * Orchestrates a multi-chain USDC send: validates destinations, builds the
- * contract requests (resolving Solana ATAs), then executes either the gasless
- * EIP-2612 permit flow or the legacy approve-then-send flow.
+ * contract requests (resolving Solana ATAs), signs an EIP-2612 permit
+ * off-chain, then executes permit + multi-send in a single transaction.
  *
  * Pure orchestration — all UI state updates go through the hooks callbacks.
  */
@@ -168,57 +151,30 @@ export class SendFlow {
   async execute(prepared: PreparedSend, hooks: SendHooks): Promise<`0x${string}`> {
     const {
       address, sourceChainId, multisendAddress, sourceUsdcAddress,
-      permit, publicClient, approveContractAsync, sendContractAsync, signTypedDataAsync,
+      permit, publicClient, sendContractAsync, signTypedDataAsync,
     } = this.deps;
     const { requests, totalUsdc6, totalNativeFee } = prepared;
 
-    if (permit) {
-      // Gasless approval: sign an EIP-2612 permit off-chain (free), then the
-      // contract executes permit + multi-send in a single transaction.
-      hooks.onStep('approving');
-      const { deadline, v, r, s } = await signPermit({
-        publicClient,
-        signTypedDataAsync,
-        owner: address,
-        spender: multisendAddress,
-        value: totalUsdc6,
-        usdcAddress: sourceUsdcAddress,
-        chainId: sourceChainId,
-        permit,
-      });
-
-      hooks.onStep('sending');
-      const sendHash = await sendContractAsync({
-        address: multisendAddress,
-        abi: MULTISEND_ABI,
-        functionName: 'permitAndMultiSend',
-        args: [requests, deadline, v, r, s],
-        value: totalNativeFee,
-        chainId: sourceChainId,
-      });
-      hooks.onSendHash(sendHash);
-      await publicClient.waitForTransactionReceipt({ hash: sendHash });
-      return sendHash;
-    }
-
-    // Legacy flow: separate on-chain approve, then multiSend.
+    // Gasless approval: sign an EIP-2612 permit off-chain (free), then the
+    // contract executes permit + multi-send in a single transaction.
     hooks.onStep('approving');
-    const approveHash = await approveContractAsync({
-      address: sourceUsdcAddress,
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [multisendAddress, totalUsdc6],
+    const { deadline, v, r, s } = await signPermit({
+      publicClient,
+      signTypedDataAsync,
+      owner: address,
+      spender: multisendAddress,
+      value: totalUsdc6,
+      usdcAddress: sourceUsdcAddress,
       chainId: sourceChainId,
+      permit,
     });
-    hooks.onApproveHash(approveHash);
-    await publicClient.waitForTransactionReceipt({ hash: approveHash });
 
     hooks.onStep('sending');
     const sendHash = await sendContractAsync({
       address: multisendAddress,
       abi: MULTISEND_ABI,
-      functionName: 'multiSend',
-      args: [requests],
+      functionName: 'permitAndMultiSend',
+      args: [requests, deadline, v, r, s],
       value: totalNativeFee,
       chainId: sourceChainId,
     });

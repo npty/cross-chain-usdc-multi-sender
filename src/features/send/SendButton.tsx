@@ -8,9 +8,6 @@ interface SendButtonProps {
   wrongChainLabel: string;
   contractDeployed: boolean;
   step: SendStepState;
-  supportsPermit: boolean;
-  isApprovePending: boolean;
-  isApproveConfirming: boolean;
   isSendPending: boolean;
   isSendConfirming: boolean;
   isSignPending: boolean;
@@ -31,7 +28,6 @@ function SpinnerLabel({ text }: { text: string }) {
 export function SendButton(props: SendButtonProps) {
   const {
     isConnected, isWrongChain, wrongChainLabel, contractDeployed, step,
-    supportsPermit, isApprovePending, isApproveConfirming,
     isSendPending, isSendConfirming, isSignPending,
     destinationCount, allQuotesReady, onSend,
   } = props;
@@ -41,18 +37,15 @@ export function SendButton(props: SendButtonProps) {
     allQuotesReady && step === 'idle' && contractDeployed;
 
   const isProcessing =
-    step === 'approving' || step === 'sending' || isApprovePending || isSendPending ||
-    isApproveConfirming || isSendConfirming || isSignPending;
+    step === 'approving' || step === 'sending' || isSendPending ||
+    isSendConfirming || isSignPending;
 
   let label: React.ReactNode;
   if (!isConnected) label = 'Connect Wallet';
   else if (isWrongChain) label = `Switch to ${wrongChainLabel}`;
   else if (!contractDeployed) label = 'Contract not deployed';
   else if (step === 'approving') {
-    if (supportsPermit) label = <SpinnerLabel text={isSignPending ? 'Sign permit in wallet...' : 'Preparing permit...'} />;
-    else if (isApprovePending || isApproveConfirming)
-      label = <SpinnerLabel text={isApprovePending ? 'Approve in wallet...' : 'Approving USDC...'} />;
-    else label = <SpinnerLabel text="Preparing..." />;
+    label = <SpinnerLabel text={isSignPending ? 'Sign permit in wallet...' : 'Preparing permit...'} />;
   } else if (step === 'sending' && (isSendPending || isSendConfirming)) {
     label = <SpinnerLabel text={isSendPending ? 'Confirm in wallet...' : 'Broadcasting...'} />;
   } else if (step === 'done') label = 'Sent!';

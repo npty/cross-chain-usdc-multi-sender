@@ -56,7 +56,6 @@ export default function App() {
   const [globalAmount, setGlobalAmount] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loadingIndices, setLoadingIndices] = useState<Set<number>>(new Set());
-  const [approveTxHash, setApproveTxHash] = useState<`0x${string}` | undefined>();
   const [sendTxHash, setSendTxHash] = useState<`0x${string}` | undefined>();
   const [step, setStep] = useState<SendStepState>('idle');
 
@@ -65,9 +64,8 @@ export default function App() {
     setGlobalAmount('');
     setPickerOpen(false);
     setLoadingIndices(new Set());
-    setApproveTxHash(undefined);
     setSendTxHash(undefined);
-  }, [setDestinations, setGlobalAmount, setPickerOpen, setLoadingIndices, setApproveTxHash, setSendTxHash]);
+  }, [setDestinations, setGlobalAmount, setPickerOpen, setLoadingIndices, setSendTxHash]);
 
   const networkDeps = {
     networkMode,
@@ -97,12 +95,10 @@ export default function App() {
   const formattedBalance = usdcBalance !== undefined
     ? (Number(usdcBalance) / 1e6).toFixed(2) : null;
 
-  const { writeContractAsync: approveAsync, isPending: isApprovePending } = useWriteContract();
   const { writeContractAsync: sendAsync, isPending: isSendPending } = useWriteContract();
   const { signTypedDataAsync, isPending: isSignPending } = useSignTypedData();
   const publicClient = usePublicClient({ chainId: SOURCE_CHAIN_ID });
 
-  const { isLoading: isApproveConfirming } = useWaitForTransactionReceipt({ hash: approveTxHash });
   const { isLoading: isSendConfirming } = useWaitForTransactionReceipt({ hash: sendTxHash });
 
   // ── Fee estimation ──────────────────────────────────────────────────────
@@ -183,22 +179,17 @@ export default function App() {
       sourceChainId: SOURCE_CHAIN_ID,
       multisendAddress: MULTISEND_ADDRESS,
       sourceUsdcAddress: sourceUsdc.address as `0x${string}`,
-      permit: source.supportsPermit
-        ? { name: source.permitName, version: source.permitVersion }
-        : null,
+      permit: { name: source.permitName, version: source.permitVersion },
       publicClient,
-      approveContractAsync: approveAsync,
       sendContractAsync: sendAsync,
       signTypedDataAsync,
     });
 
     try {
-      setApproveTxHash(undefined);
       setSendTxHash(undefined);
       const prepared = await flow.prepare(destinations);
       await flow.execute(prepared, {
         onStep: setStep,
-        onApproveHash: setApproveTxHash,
         onSendHash: setSendTxHash,
       });
       setStep('done');
@@ -206,7 +197,7 @@ export default function App() {
       toast.error(parseOnchainError(e));
       setStep('idle');
     }
-  }, [address, publicClient, isWrongChain, switchChain, networkMode, source, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, approveAsync, sendAsync, signTypedDataAsync, setApproveTxHash, setSendTxHash, setStep]);
+  }, [address, publicClient, isWrongChain, switchChain, networkMode, source, SOURCE_CHAIN_ID, MULTISEND_ADDRESS, destinations, sourceUsdc, contractDeployed, sendAsync, signTypedDataAsync, setSendTxHash, setStep]);
 
   const selectedIds = destinations.map((d) => d.chainId);
   const pickerChains = net.destinations.filter((d) => d.chainId !== source.chainId);
@@ -305,9 +296,6 @@ export default function App() {
             wrongChainLabel={sourceChain.name}
             contractDeployed={contractDeployed}
             step={step}
-            supportsPermit={source.supportsPermit}
-            isApprovePending={isApprovePending}
-            isApproveConfirming={isApproveConfirming}
             isSendPending={isSendPending}
             isSendConfirming={isSendConfirming}
             isSignPending={isSignPending}
