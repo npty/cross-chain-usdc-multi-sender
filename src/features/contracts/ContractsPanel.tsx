@@ -58,10 +58,6 @@ function ContractRow({ contract }: { contract: DeployedContract }) {
 export function ContractsPanel() {
   return (
     <div className="space-y-5">
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--muted)' }}>
-        Every MultiSend contract below is deployed and open for inspection. Verified means the
-        source code on the explorer matches the deployed bytecode exactly.
-      </p>
       {MODES.map(({ mode, label }) => {
         const list = CONTRACTS.filter((c) => c.mode === mode);
         if (list.length === 0) return null;
