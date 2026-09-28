@@ -1,4 +1,3 @@
-import { Info } from 'lucide-react';
 
 import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import type { ChainDestination } from '../destinations/types';
@@ -38,13 +37,6 @@ export function FeeSummary({ destinations, networkMode, totals, loadingIndices }
           value={totals.allQuotesReady ? `${totals.usdcTotalPlusFees.toFixed(6)} USDC` : '—'}
           bold accent
         />
-      </div>
-
-      <div className="mt-3 flex items-start gap-2 rounded-xl p-3" style={{ background: 'rgba(18,45,69,0.05)' }}>
-        <Info className="size-3.5 mt-0.5 shrink-0" style={{ color: 'var(--muted)' }} />
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--muted)' }}>
-          On Arc, native gas and USDC share the same pool. Fees are paid as native (18-dec) via msg.value; principal is pulled as ERC-20 (6-dec). The total above converts both to USDC terms.
-        </p>
       </div>
 
       {destinations.length > 1 && (
