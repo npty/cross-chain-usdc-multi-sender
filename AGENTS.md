@@ -14,12 +14,7 @@ Sends USDC to multiple destination chains simultaneously in a single transaction
 
 | Contract | Chain | Address | Explorer |
 |---|---|---|---|
-| MultiChainUSDCSend v1 (deprecated) | Arc Testnet | 0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e | https://explorer.testnet.arc.io/address/0x1c72d8cd88c026fa3bb44c01a573cb9477dc781e |
-| MultiChainUSDCSend v2 (deprecated) | Arc Testnet | 0x014f84afa85297376a4a04d4b5922f3ec1f4a215 | https://explorer.testnet.arc.io/address/0x014f84afa85297376a4a04d4b5922f3ec1f4a215 |
-| MultiChainUSDCSend v3 (deprecated) | Arc Testnet | 0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb | https://explorer.testnet.arc.io/address/0xe2e1c920d8b5a52af05da22fe0dda3b5dbd0e7eb |
 | MultiChainUSDCSend v4 (active) | Arc Testnet | 0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f | https://explorer.testnet.arc.io/address/0x73b5e63f91c2fa200b2b56f8a8a2b1482f12a02f |
-| MultiChainUSDCSend v1 (broken — wrong messenger) | Arc Mainnet | 0x0032A5147f96039b62D08f651884aa58CFa30772 | https://explorer.arc.io/address/0x0032A5147f96039b62D08f651884aa58CFa30772 |
-| MultiChainUSDCSend v2 (active) | Arc Mainnet | 0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 | https://explorer.arc.io/address/0x2b8622e0B04b6ee1CDd235e059503ab3fe5BE839 |
 | MultiChainUSDCSend v3 (active, +EIP-2612 permit) | Arc Mainnet | 0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 | https://explorer.arc.io/address/0xB00cDe5662F5190d9F76B3629C16145Be7B28c57 |
 
 ## Environment Variables
