@@ -13,15 +13,13 @@
  * 'usdc' for the ERC-20. Mixing the two is a 10^12 error on a money path.
  */
 
-export const USDC_DECIMALS = 6;
-
-export interface TokenFact {
+interface TokenFact {
   symbol: string;
   address: string;
   decimals: number;
 }
 
-export interface NativeCurrencyFact {
+interface NativeCurrencyFact {
   symbol: string;
   decimals: number;
   /** True when the gas token IS USDC, which makes 'decimals' above the gas decimals. */
@@ -48,16 +46,8 @@ export interface OnchainChain {
   solanaUsdcMint?: string;
 }
 
-export interface ProtocolContractFact {
-  name: string;
-  address: string;
-  protocol: 'CCTP' | 'Gateway';
-  networkKind?: 'testnet' | 'mainnet';
-}
-
 interface OnchainFacts {
   chains: OnchainChain[];
-  protocolContracts: ProtocolContractFact[];
 }
 
 const FACTS: OnchainFacts = {
@@ -472,94 +462,11 @@ const FACTS: OnchainFacts = {
       }
     }
   ],
-  "protocolContracts": [
-    {
-      "name": "TokenMessengerV2",
-      "address": "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
-      "protocol": "CCTP",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "MessageTransmitterV2",
-      "address": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
-      "protocol": "CCTP",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "TokenMinterV2",
-      "address": "0xb43db544E2c27092c107639Ad201b3dEfAbcF192",
-      "protocol": "CCTP",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "MessageV2",
-      "address": "0xbaC0179bB358A8936169a63408C8481D582390C4",
-      "protocol": "CCTP",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "BridgingKitContract",
-      "address": "0xC5567a5E3370d4DBfB0540025078e283e36A363d",
-      "protocol": "CCTP",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "TokenMessengerV2",
-      "address": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-      "protocol": "CCTP",
-      "networkKind": "mainnet"
-    },
-    {
-      "name": "MessageTransmitterV2",
-      "address": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
-      "protocol": "CCTP",
-      "networkKind": "mainnet"
-    },
-    {
-      "name": "TokenMinterV2",
-      "address": "0xfd78EE919681417d192449715b2594ab58f5D002",
-      "protocol": "CCTP",
-      "networkKind": "mainnet"
-    },
-    {
-      "name": "MessageV2",
-      "address": "0xec546b6B005471ECf012e5aF77FBeC07e0FD8f78",
-      "protocol": "CCTP",
-      "networkKind": "mainnet"
-    },
-    {
-      "name": "GatewayWallet",
-      "address": "0x0077777d7EBA4688BDeF3E311b846F25870A19B9",
-      "protocol": "Gateway",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "GatewayMinter",
-      "address": "0x0022222ABE238Cc2C7Bb1f21003F0a260052475B",
-      "protocol": "Gateway",
-      "networkKind": "testnet"
-    },
-    {
-      "name": "GatewayWallet",
-      "address": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE",
-      "protocol": "Gateway",
-      "networkKind": "mainnet"
-    },
-    {
-      "name": "GatewayMinter",
-      "address": "0x2222222d7164433c4C09B0b0D809a9b52C04C205",
-      "protocol": "Gateway",
-      "networkKind": "mainnet"
-    }
-  ]
 };
 
 export const ONCHAIN_CHAINS: readonly OnchainChain[] = FACTS.chains;
 
 export const TESTNET_ONCHAIN_CHAINS: readonly OnchainChain[] = FACTS.chains.filter((chain) => chain.isTestnet);
-
-/** CCTP and Gateway addresses differ by network kind (see networkKind) — mainnet differs from testnet. */
-export const EVM_PROTOCOL_CONTRACTS: readonly ProtocolContractFact[] = FACTS.protocolContracts;
 
 const BY_CHAIN_ID = new Map(ONCHAIN_CHAINS.map((chain) => [chain.chainId, chain]));
 
@@ -567,7 +474,7 @@ const BY_SCP_BLOCKCHAIN = new Map(
   ONCHAIN_CHAINS.flatMap((chain) => (chain.scpBlockchain ? [[chain.scpBlockchain, chain] as const] : [])),
 );
 
-export function getChain(chainId: number): OnchainChain | undefined {
+function getChain(chainId: number): OnchainChain | undefined {
   return BY_CHAIN_ID.get(chainId);
 }
 
@@ -581,7 +488,7 @@ export function requireChain(chainId: number): OnchainChain {
   return chain;
 }
 
-export function getChainByScpBlockchain(blockchain: string): OnchainChain | undefined {
+function getChainByScpBlockchain(blockchain: string): OnchainChain | undefined {
   return BY_SCP_BLOCKCHAIN.get(blockchain);
 }
 
@@ -599,21 +506,6 @@ export function requireChainByScpBlockchain(blockchain: string): OnchainChain {
 
 export function getUsdc(chainId: number): TokenFact | undefined {
   return getChain(chainId)?.usdc;
-}
-
-export function getProtocolContractByName(
-  name: string,
-  networkKind?: 'testnet' | 'mainnet',
-): ProtocolContractFact | undefined {
-  const matches = EVM_PROTOCOL_CONTRACTS.filter((contract) => contract.name === name);
-  if (matches.length > 1 && networkKind === undefined) {
-    throw new Error('"' + name + '" has both a testnet and a mainnet address — pass networkKind to disambiguate');
-  }
-  return matches.find((contract) => contract.networkKind === undefined || contract.networkKind === networkKind);
-}
-
-export function buildAddressExplorerUrl(chainId: number, address: string): string {
-  return requireChain(chainId).explorerBase + '/address/' + address;
 }
 
 export function buildTxExplorerUrl(chainId: number, txHash: string): string {

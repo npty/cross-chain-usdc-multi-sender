@@ -38,11 +38,6 @@ import {
 import { arcTestnet, arc } from 'viem/chains'
 import { injected } from 'wagmi/connectors'
 import { defineChain } from 'viem'
-import { registerChain } from './tracing'
-
-// Pre-register Arc RPCs for trace events
-registerChain(arcTestnet.id, arcTestnet.rpcUrls.default.http[0])
-registerChain(arc.id, arc.rpcUrls.default.http[0])
 
 // ── Destination chains (CCTP v2 Forwarding Service testnets) ──────────────────
 
