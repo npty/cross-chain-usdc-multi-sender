@@ -24,6 +24,22 @@ function StatusBadge({ verified }: { verified: boolean }) {
   );
 }
 
+function VanityShortAddress({ address }: { address: string }) {
+  // Vanity deployments start with 0x001 (testnet) or 0x002 (mainnet).
+  // Bold that prefix so the network is visible at a glance.
+  const short = shortAddress(address);
+  if (!/^0x00[12]/i.test(address)) return <>{short}</>;
+  return (
+    <>
+      {short.slice(0, 2)}
+      <span className="font-bold" style={{ color: 'var(--ink)' }}>
+        {short.slice(2, 5)}
+      </span>
+      {short.slice(5)}
+    </>
+  );
+}
+
 function ContractRow({ contract }: { contract: DeployedContract }) {
   return (
     <div
@@ -43,7 +59,7 @@ function ContractRow({ contract }: { contract: DeployedContract }) {
         className="mt-1.5 inline-flex items-center gap-1.5 text-xs mono underline"
         style={{ color: 'var(--muted)' }}
       >
-        {shortAddress(contract.address)}
+        <VanityShortAddress address={contract.address} />
         <ExternalLink className="size-3.5" />
       </a>
       {contract.note && (
