@@ -2,6 +2,7 @@
 import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import type { ChainDestination } from '../destinations/types';
 import type { SendTotals } from './totals';
+import { formatUSDC } from './format';
 
 const card: React.CSSProperties = {
   background: 'var(--surface)',
@@ -25,7 +26,7 @@ export function FeeSummary({ destinations, networkMode, totals, loadingIndices }
     <div style={{ ...card, padding: '16px' }}>
       <p className="text-xs font-semibold mb-3" style={{ color: 'var(--muted)' }}>Transaction Summary</p>
       <div className="space-y-2">
-        <SummaryRow label="USDC to send" value={`${totals.usdcTotal.toFixed(2)} USDC`} bold />
+        <SummaryRow label="USDC to send" value={`${formatUSDC(totals.usdcTotal)} USDC`} bold />
         <SummaryRow
           label={`Forwarding fees (${destinations.length} chain${destinations.length > 1 ? 's' : ''})`}
           value={totals.allQuotesReady ? `${totals.feeUSDC.toFixed(6)} USDC` : loadingIndices.size > 0 ? 'Estimating...' : '—'}
