@@ -1,5 +1,4 @@
 
-import { getNetworkChain, type NetworkMode } from '@/cctp-chains';
 import type { ChainDestination } from '../destinations/types';
 import type { SendTotals } from './totals';
 import { formatUSDC } from './format';
@@ -13,13 +12,12 @@ const card: React.CSSProperties = {
 
 interface FeeSummaryProps {
   destinations: ChainDestination[];
-  networkMode: NetworkMode;
   totals: SendTotals;
   loadingIndices: Set<number>;
 }
 
-/** Transaction summary: USDC total, forwarding fees, and per-chain breakdown. */
-export function FeeSummary({ destinations, networkMode, totals, loadingIndices }: FeeSummaryProps) {
+/** Transaction summary: total USDC to send, total forwarding fees, total deducted. */
+export function FeeSummary({ destinations, totals, loadingIndices }: FeeSummaryProps) {
   if (destinations.length === 0) return null;
 
   return (
@@ -39,28 +37,6 @@ export function FeeSummary({ destinations, networkMode, totals, loadingIndices }
           bold accent
         />
       </div>
-
-      {destinations.length > 1 && (
-        <div className="mt-3 space-y-1">
-          <p className="text-xs font-semibold mb-2" style={{ color: 'var(--muted)' }}>Per-chain breakdown</p>
-          {destinations.map((dest, i) => {
-            const chain = getNetworkChain(networkMode, dest.chainId)!;
-            const feeDisplay = dest.feeQuote
-              ? `${(Number(dest.feeQuote.feeTotalAmount) / 1e18).toFixed(6)} USDC`
-              : loadingIndices.has(i) ? 'estimating...' : '—';
-            return (
-              <div key={dest.chainId} className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--subtle)' }}>
-                  {chain.name}
-                </span>
-                <span className="text-xs tabular-nums font-medium" style={{ color: 'var(--ink-2)' }}>
-                  {feeDisplay} fee
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

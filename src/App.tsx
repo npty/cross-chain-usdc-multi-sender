@@ -301,7 +301,6 @@ export default function App() {
 
         <FeeSummary
           destinations={destinations}
-          networkMode={networkMode}
           totals={totals}
           loadingIndices={loadingIndices}
         />
